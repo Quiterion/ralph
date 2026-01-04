@@ -316,22 +316,28 @@ cmd_spawn() {
 
         # Create the worktree
         local worktree_created=false
+        local wt_output
+        debug "Creating worktree: path=$worktree_path agent=$agent_id start=$start_point"
+        debug "CWD=$(pwd) MAIN_PROJECT_ROOT=$MAIN_PROJECT_ROOT"
         if [[ -n "$start_point" ]]; then
             # Branch from implementer's branch
-            if git worktree add "$worktree_path" -b "$agent_id" "$start_point" --quiet 2>&1 ||
-               git worktree add "$worktree_path" "$agent_id" --quiet 2>&1; then
+            if wt_output=$(git worktree add "$worktree_path" -b "$agent_id" "$start_point" 2>&1); then
+                worktree_created=true
+            elif wt_output=$(git worktree add "$worktree_path" "$agent_id" 2>&1); then
                 worktree_created=true
             fi
         else
             # Default: branch from HEAD
-            if git worktree add "$worktree_path" -b "$agent_id" --quiet 2>&1 ||
-               git worktree add "$worktree_path" "$agent_id" --quiet 2>&1; then
+            if wt_output=$(git worktree add "$worktree_path" -b "$agent_id" 2>&1); then
+                worktree_created=true
+            elif wt_output=$(git worktree add "$worktree_path" "$agent_id" 2>&1); then
                 worktree_created=true
             fi
         fi
 
         if [[ "$worktree_created" != "true" ]]; then
             error "Failed to create worktree for $agent_id"
+            error "Git output: $wt_output"
             exit "$EXIT_ERROR"
         fi
 

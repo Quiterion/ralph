@@ -232,23 +232,25 @@ while read -r oldrev newrev refname; do
         export WIGGUM_NEW_STATE="$new_state"
 
         # Trigger appropriate hook via wiggum (background, log errors)
+        # CRITICAL: unset GIT_DIR to prevent pollution - git sets it to tickets.git
+        # which breaks worktree operations in the main project
         case "$new_state" in
             review)
-                (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-draft-done "$ticket_id" 2>>"$HOOK_LOG" &)
+                (cd "$PROJECT_ROOT" && unset GIT_DIR GIT_WORK_TREE && "$WIGGUM_BIN" hook run on-draft-done "$ticket_id" 2>>"$HOOK_LOG" &)
                 ;;
             qa)
-                (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-review-done "$ticket_id" 2>>"$HOOK_LOG" &)
+                (cd "$PROJECT_ROOT" && unset GIT_DIR GIT_WORK_TREE && "$WIGGUM_BIN" hook run on-review-done "$ticket_id" 2>>"$HOOK_LOG" &)
                 ;;
             in-progress)
                 if [[ "$old_state" == "review" ]]; then
-                    (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-review-rejected "$ticket_id" 2>>"$HOOK_LOG" &)
+                    (cd "$PROJECT_ROOT" && unset GIT_DIR GIT_WORK_TREE && "$WIGGUM_BIN" hook run on-review-rejected "$ticket_id" 2>>"$HOOK_LOG" &)
                 elif [[ "$old_state" == "qa" ]]; then
-                    (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-qa-rejected "$ticket_id" 2>>"$HOOK_LOG" &)
+                    (cd "$PROJECT_ROOT" && unset GIT_DIR GIT_WORK_TREE && "$WIGGUM_BIN" hook run on-qa-rejected "$ticket_id" 2>>"$HOOK_LOG" &)
                 fi
                 ;;
             done)
-                (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-qa-done "$ticket_id" 2>>"$HOOK_LOG" &)
-                (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-close "$ticket_id" 2>>"$HOOK_LOG" &)
+                (cd "$PROJECT_ROOT" && unset GIT_DIR GIT_WORK_TREE && "$WIGGUM_BIN" hook run on-qa-done "$ticket_id" 2>>"$HOOK_LOG" &)
+                (cd "$PROJECT_ROOT" && unset GIT_DIR GIT_WORK_TREE && "$WIGGUM_BIN" hook run on-close "$ticket_id" 2>>"$HOOK_LOG" &)
                 ;;
         esac
     done

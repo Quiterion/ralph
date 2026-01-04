@@ -149,7 +149,10 @@ cmd_spawn() {
         fi
     fi
 
-    success "Spawned $pane_name"
+    # Show success message only when interactive (TTY)
+    if [[ -t 1 ]]; then
+        success "Spawned $pane_name"
+    fi
     echo "$pane_name"
 }
 

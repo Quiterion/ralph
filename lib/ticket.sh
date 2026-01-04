@@ -150,7 +150,10 @@ created_by: manual
 
 EOF
 
-    success "Created ticket: $id"
+    # Show success message only when interactive (TTY)
+    if [[ -t 1 ]]; then
+        success "Created ticket: $id"
+    fi
     echo "$id"
 }
 

@@ -322,7 +322,7 @@ cmd_spawn() {
     tmux send-keys -t "$tmux_pane_id" "$agent_cmd" Enter
 
     # Wait for agent to initialize (give it time to show welcome banner)
-    sleep 4
+    sleep 6
 
     # Send the initial prompt using vim-safe input
     local initial_msg="Please read your role instructions from .wiggum/current_prompt.md and begin your work. Your role is: $role${ticket_id:+, assigned ticket: $ticket_id}"

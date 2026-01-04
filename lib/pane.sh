@@ -302,6 +302,18 @@ cmd_spawn() {
             fi
         fi
 
+        # Clean up stale branch from previous session if it exists without a worktree
+        # (prevents "branch already exists" error when hook tries to spawn)
+        if git rev-parse --verify "$agent_id" &>/dev/null; then
+            # Branch exists - check if it has a worktree
+            local branch_worktree
+            branch_worktree=$(git worktree list --porcelain | grep -A2 "^worktree " | grep -B1 "^branch refs/heads/$agent_id$" | grep "^worktree " | cut -d' ' -f2)
+            if [[ -z "$branch_worktree" ]]; then
+                debug "Deleting stale branch $agent_id (no worktree)"
+                git branch -D "$agent_id" --quiet 2>/dev/null || true
+            fi
+        fi
+
         # Create the worktree
         local worktree_created=false
         if [[ -n "$start_point" ]]; then

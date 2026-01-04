@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# on-draft-done - Triggered when implementation is complete
+#
+# Spawns a reviewer for the ticket.
+#
+# Environment:
+#   WIGGUM_TICKET_ID    - The ticket ID
+#   WIGGUM_TICKET_PATH  - Full path to ticket file
+#   WIGGUM_PREV_STATE   - Previous state (implement)
+#   WIGGUM_NEW_STATE    - New state (review)
+#   WIGGUM_PANE         - Pane that triggered transition
+#   WIGGUM_SESSION      - tmux session name
+#
+
+TICKET_ID="${1:-$WIGGUM_TICKET_ID}"
+
+echo "[hook] Implementation done for $TICKET_ID, spawning reviewer"
+
+# Spawn a reviewer agent
+wiggum spawn reviewer "$TICKET_ID"

@@ -19,10 +19,10 @@ You give it a URL and a natural language prompt. Internally, it:
 
 You don't see the raw HTML. You don't see the internal LLM call. You get **insight**.
 
-**ralphs tools follow this pattern.**
+**wiggum tools follow this pattern.**
 
 ```
-ralphs fetch <pane> <prompt> → summarized insight
+wiggum fetch <pane> <prompt> → summarized insight
 ```
 
 Internally, the tool:
@@ -49,12 +49,12 @@ The distinction: if work is substantial enough to warrant observation and potent
 
 ## Tool Reference
 
-### ralphs fetch
+### wiggum fetch
 
 Summarize a worker's progress.
 
 ```bash
-ralphs fetch <pane-id> [prompt]
+wiggum fetch <pane-id> [prompt]
 ```
 
 **Arguments:**
@@ -65,17 +65,17 @@ ralphs fetch <pane-id> [prompt]
 
 ```bash
 # General progress summary
-ralphs fetch worker-0
+wiggum fetch worker-0
 # → "Implemented auth middleware in src/middleware/auth.ts.
 #    Added 3 test cases, all passing. Ready for review."
 
 # Focused query
-ralphs fetch worker-0 "any blockers or concerns?"
+wiggum fetch worker-0 "any blockers or concerns?"
 # → "No blockers. Minor concern: rate limiting not yet addressed,
 #    noted in ticket for review phase."
 
 # Specific check
-ralphs fetch worker-0 "is the test coverage adequate?"
+wiggum fetch worker-0 "is the test coverage adequate?"
 # → "Coverage looks thin. Only happy path tested. Missing:
 #    expired token, malformed token, missing token cases."
 ```
@@ -89,12 +89,12 @@ ralphs fetch worker-0 "is the test coverage adequate?"
 
 ---
 
-### ralphs context
+### wiggum context
 
 Build a briefing for an agent about to start work.
 
 ```bash
-ralphs context <ticket-id> [prompt]
+wiggum context <ticket-id> [prompt]
 ```
 
 **Arguments:**
@@ -105,14 +105,14 @@ ralphs context <ticket-id> [prompt]
 
 ```bash
 # Full briefing
-ralphs context tk-5c46
+wiggum context tk-5c46
 # → "Ticket: Implement auth middleware
 #    Dependencies: tk-3a1b (done) - database schema
 #    Related specs: specs/api.md, specs/auth.md
 #    Recent activity: Created 2h ago, no work started yet"
 
 # Focused briefing
-ralphs context tk-5c46 "what specs are relevant?"
+wiggum context tk-5c46 "what specs are relevant?"
 # → "Relevant specs:
 #    - specs/auth.md: JWT format, token expiry rules
 #    - specs/api.md: Middleware chain, error response format"
@@ -127,7 +127,7 @@ ralphs context tk-5c46 "what specs are relevant?"
 
 ---
 
-### ralphs ticket feedback
+### wiggum ticket feedback
 
 Append feedback to a ticket and notify the worker. See [cli.md](./cli.md#feedback) for command details.
 
@@ -143,19 +143,19 @@ This notification loop is how rejected reviews/QA get the worker's attention.
 
 ---
 
-### ralphs digest
+### wiggum digest
 
 Summarize multiple workers or the whole hive.
 
 ```bash
-ralphs digest [prompt]
+wiggum digest [prompt]
 ```
 
 **Examples:**
 
 ```bash
 # Overall status
-ralphs digest
+wiggum digest
 # → "3 workers active:
 #    - worker-0 (tk-5c46): Auth middleware, nearly done
 #    - worker-1 (tk-8a2b): Rate limiting, blocked on auth
@@ -164,7 +164,7 @@ ralphs digest
 #    2 tickets ready to claim. No critical blockers."
 
 # Specific question
-ralphs digest "what's blocking progress?"
+wiggum digest "what's blocking progress?"
 # → "Main blocker: tk-8a2b waiting on tk-5c46 (auth).
 #    worker-0 is close to done, should unblock within the hour."
 ```
@@ -173,13 +173,13 @@ ralphs digest "what's blocking progress?"
 
 ## Writing Custom Tools
 
-Tools are shell scripts in `.ralphs/tools/` (or system-wide in the ralphs installation).
+Tools are shell scripts in `.wiggum/tools/` (or system-wide in the wiggum installation).
 
 A tool receives arguments and should output text to stdout.
 
 ```bash
 #!/bin/bash
-# .ralphs/tools/my-custom-tool
+# .wiggum/tools/my-custom-tool
 
 TARGET="$1"
 PROMPT="$2"
@@ -188,10 +188,10 @@ PROMPT="$2"
 DATA=$(some-command "$TARGET")
 
 # Invoke ephemeral agent for synthesis
-echo "$DATA" | ralphs --ephemeral --prompt "$PROMPT"
+echo "$DATA" | wiggum --ephemeral --prompt "$PROMPT"
 ```
 
-The `ralphs --ephemeral` flag runs a one-shot agent invocation that doesn't create a pane.
+The `wiggum --ephemeral` flag runs a one-shot agent invocation that doesn't create a pane.
 
 ---
 

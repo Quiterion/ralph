@@ -1,15 +1,15 @@
 # Prompts
 
-Each agent role has a prompt template that defines its behavior. Prompts are markdown files in `.ralphs/prompts/`.
+Each agent role has a prompt template that defines its behavior. Prompts are markdown files in `.wiggum/prompts/`.
 
 ---
 
 ## Prompt Loading
 
-When `ralphs spawn <role> <ticket>` runs:
+When `wiggum spawn <role> <ticket>` runs:
 
-1. Load role prompt from `.ralphs/prompts/<role>.md`
-2. Load ticket context via `ralphs context <ticket>`
+1. Load role prompt from `.wiggum/prompts/<role>.md`
+2. Load ticket context via `wiggum context <ticket>`
 3. Load project specs referenced by ticket
 4. Compose into agent's initial prompt
 5. Start inner harness with composed prompt
@@ -20,7 +20,7 @@ When `ralphs spawn <role> <ticket>` runs:
 
 ### supervisor.md
 
-The orchestrator. Manages the school of ralphs.
+The orchestrator. Manages the school of wiggum.
 
 ```markdown
 # Supervisor
@@ -30,24 +30,24 @@ orchestrate workers, not to write code yourself.
 
 ## Your Tools
 
-- `ralphs ticket ready` — see tickets available for work
-- `ralphs ticket blocked` — see blocked tickets
-- `ralphs spawn worker <ticket>` — assign a worker to a ticket
-- `ralphs fetch <pane> <prompt>` — get summarized worker progress
-- `ralphs digest <prompt>` — get overall hive status
-- `ralphs ping <pane> <message>` — send message to worker
+- `wiggum ticket ready` — see tickets available for work
+- `wiggum ticket blocked` — see blocked tickets
+- `wiggum spawn worker <ticket>` — assign a worker to a ticket
+- `wiggum fetch <pane> <prompt>` — get summarized worker progress
+- `wiggum digest <prompt>` — get overall hive status
+- `wiggum ping <pane> <message>` — send message to worker
 
 ## Your Responsibilities
 
 1. Monitor ticket queue and spawn workers for ready tickets
-2. Check worker progress periodically via `ralphs fetch`
+2. Check worker progress periodically via `wiggum fetch`
 3. Intervene if workers appear stuck
-4. Respect worker capacity limits (RALPHS_MAX_AGENTS)
+4. Respect worker capacity limits (WIGGUM_MAX_AGENTS)
 
 ## What You Don't Do
 
 - Write code directly
-- Read raw worker output (use `ralphs fetch` instead)
+- Read raw worker output (use `wiggum fetch` instead)
 - Micromanage implementation details
 
 ## Loop Structure
@@ -103,7 +103,7 @@ assigned to you.
 When your work is ready for review:
 
 ```bash
-ralphs ticket transition {TICKET_ID} review
+wiggum ticket transition {TICKET_ID} review
 ```
 
 This will trigger a reviewer to examine your changes.
@@ -148,7 +148,7 @@ for a ticket and provide feedback.
 ## If Approving
 
 ```bash
-ralphs ticket transition {TICKET_ID} qa
+wiggum ticket transition {TICKET_ID} qa
 ```
 
 ## If Rejecting
@@ -156,8 +156,8 @@ ralphs ticket transition {TICKET_ID} qa
 Add specific, actionable feedback:
 
 ```bash
-ralphs ticket feedback {TICKET_ID} reviewer "Your feedback here"
-ralphs ticket transition {TICKET_ID} in-progress
+wiggum ticket feedback {TICKET_ID} reviewer "Your feedback here"
+wiggum ticket transition {TICKET_ID} in-progress
 ```
 
 Be specific. "Needs improvement" is not helpful.
@@ -203,7 +203,7 @@ is marked complete.
 ## If Passing
 
 ```bash
-ralphs ticket transition {TICKET_ID} done
+wiggum ticket transition {TICKET_ID} done
 ```
 
 ## If Failing
@@ -211,8 +211,8 @@ ralphs ticket transition {TICKET_ID} done
 Add specific feedback about what failed:
 
 ```bash
-ralphs ticket feedback {TICKET_ID} qa "Your feedback here"
-ralphs ticket transition {TICKET_ID} in-progress
+wiggum ticket feedback {TICKET_ID} qa "Your feedback here"
+wiggum ticket transition {TICKET_ID} in-progress
 ```
 
 ## Project Context
@@ -242,7 +242,7 @@ Prompts support these variables, replaced at spawn time:
 You can create additional prompts for specialized roles:
 
 ```
-.ralphs/prompts/
+.wiggum/prompts/
 ├── supervisor.md
 ├── worker.md
 ├── reviewer.md
@@ -255,7 +255,7 @@ You can create additional prompts for specialized roles:
 Spawn with custom role:
 
 ```bash
-ralphs spawn security-reviewer tk-5c46
+wiggum spawn security-reviewer tk-5c46
 ```
 
 ---

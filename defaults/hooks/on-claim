@@ -3,14 +3,14 @@
 # on-claim - Triggered when a worker claims a ticket
 #
 # Environment:
-#   RALPHS_TICKET_ID    - The ticket ID
-#   RALPHS_TICKET_PATH  - Full path to ticket file
-#   RALPHS_SESSION      - tmux session name
+#   WIGGUM_TICKET_ID    - The ticket ID
+#   WIGGUM_TICKET_PATH  - Full path to ticket file
+#   WIGGUM_SESSION      - tmux session name
 #
 
-TICKET_ID="${1:-$RALPHS_TICKET_ID}"
+TICKET_ID="${1:-$WIGGUM_TICKET_ID}"
 
 echo "[hook] Ticket $TICKET_ID claimed"
 
 # Optional: Log to a work log
-# echo "$(date -Iseconds) CLAIM $TICKET_ID" >> .ralphs/work.log
+# echo "$(date -Iseconds) CLAIM $TICKET_ID" >> .wiggum/work.log

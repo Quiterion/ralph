@@ -19,8 +19,8 @@ run_hook() {
 
     if [[ -x "$HOOKS_DIR/$hook_name" ]]; then
         hook_path="$HOOKS_DIR/$hook_name"
-    elif [[ -x "$RALPHS_DEFAULTS/hooks/$hook_name" ]]; then
-        hook_path="$RALPHS_DEFAULTS/hooks/$hook_name"
+    elif [[ -x "$WIGGUM_DEFAULTS/hooks/$hook_name" ]]; then
+        hook_path="$WIGGUM_DEFAULTS/hooks/$hook_name"
     else
         debug "No hook found: $hook_name"
         return 0
@@ -29,10 +29,10 @@ run_hook() {
     debug "Running hook: $hook_path"
 
     # Set up environment
-    export RALPHS_TICKET_ID="$ticket_id"
-    export RALPHS_TICKET_PATH="$TICKETS_DIR/${ticket_id}.md"
-    export RALPHS_SESSION
-    export RALPHS_HOOKS_DIR="$HOOKS_DIR"
+    export WIGGUM_TICKET_ID="$ticket_id"
+    export WIGGUM_TICKET_PATH="$TICKETS_DIR/${ticket_id}.md"
+    export WIGGUM_SESSION
+    export WIGGUM_HOOKS_DIR="$HOOKS_DIR"
 
     # Run the hook
     if "$hook_path" "$ticket_id"; then
@@ -48,7 +48,7 @@ run_hook() {
 # Hook subcommand router
 cmd_hook() {
     if [[ $# -eq 0 ]]; then
-        error "Usage: ralphs hook <run|list> [args]"
+        error "Usage: wiggum hook <run|list> [args]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -58,7 +58,7 @@ cmd_hook() {
     case "$subcmd" in
         run)
             if [[ $# -lt 2 ]]; then
-                error "Usage: ralphs hook run <hook-name> <ticket-id>"
+                error "Usage: wiggum hook run <hook-name> <ticket-id>"
                 exit "$EXIT_INVALID_ARGS"
             fi
             run_hook "$1" "$2"
@@ -77,7 +77,7 @@ cmd_hook() {
 list_hooks() {
     require_project
 
-    echo "Project hooks (.ralphs/hooks/):"
+    echo "Project hooks (.wiggum/hooks/):"
     if [[ -d "$HOOKS_DIR" ]]; then
         for hook in "$HOOKS_DIR"/*; do
             [[ -f "$hook" ]] || continue
@@ -91,8 +91,8 @@ list_hooks() {
 
     echo ""
     echo "Default hooks:"
-    if [[ -d "$RALPHS_DEFAULTS/hooks" ]]; then
-        for hook in "$RALPHS_DEFAULTS/hooks"/*; do
+    if [[ -d "$WIGGUM_DEFAULTS/hooks" ]]; then
+        for hook in "$WIGGUM_DEFAULTS/hooks"/*; do
             [[ -f "$hook" ]] || continue
             echo "  $(basename "$hook")"
         done

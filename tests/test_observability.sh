@@ -16,10 +16,10 @@ source "$SCRIPT_DIR/framework.sh"
 #
 
 test_fetch_requires_pane_id() {
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # fetch without pane-id should fail
-    if "$RALPHS_BIN" fetch 2>/dev/null; then
+    if "$WIGGUM_BIN" fetch 2>/dev/null; then
         echo "Fetch should require pane-id argument"
         return 1
     fi
@@ -31,10 +31,10 @@ test_fetch_fails_no_session() {
         return 0
     fi
 
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # fetch with no session should fail
-    if "$RALPHS_BIN" fetch worker-0 2>/dev/null; then
+    if "$WIGGUM_BIN" fetch worker-0 2>/dev/null; then
         echo "Fetch should fail without session"
         return 1
     fi
@@ -48,14 +48,14 @@ test_fetch_pane_not_found() {
 
     local session
     session=$(test_session_name)
-    export RALPHS_SESSION="$session"
+    export WIGGUM_SESSION="$session"
     trap "cleanup_test_session '$session'" RETURN
 
-    "$RALPHS_BIN" init
-    "$RALPHS_BIN" spawn supervisor &>/dev/null
+    "$WIGGUM_BIN" init
+    "$WIGGUM_BIN" spawn supervisor &>/dev/null
 
     # fetch non-existent pane should fail
-    if "$RALPHS_BIN" fetch nonexistent-pane 2>/dev/null; then
+    if "$WIGGUM_BIN" fetch nonexistent-pane 2>/dev/null; then
         echo "Fetch should fail for non-existent pane"
         return 1
     fi
@@ -64,10 +64,10 @@ test_fetch_pane_not_found() {
 }
 
 test_logs_requires_pane_id() {
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # logs without pane-id should fail
-    if "$RALPHS_BIN" logs 2>/dev/null; then
+    if "$WIGGUM_BIN" logs 2>/dev/null; then
         echo "Logs should require pane-id argument"
         return 1
     fi
@@ -79,10 +79,10 @@ test_logs_fails_no_session() {
         return 0
     fi
 
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # logs with no session should fail
-    if "$RALPHS_BIN" logs worker-0 2>/dev/null; then
+    if "$WIGGUM_BIN" logs worker-0 2>/dev/null; then
         echo "Logs should fail without session"
         return 1
     fi
@@ -94,32 +94,32 @@ test_digest_fails_no_session() {
         return 0
     fi
 
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # digest with no session should fail
-    if "$RALPHS_BIN" digest 2>/dev/null; then
+    if "$WIGGUM_BIN" digest 2>/dev/null; then
         echo "Digest should fail without session"
         return 1
     fi
 }
 
 test_context_requires_ticket_id() {
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # context without ticket-id should fail
-    if "$RALPHS_BIN" context 2>/dev/null; then
+    if "$WIGGUM_BIN" context 2>/dev/null; then
         echo "Context should require ticket-id argument"
         return 1
     fi
 }
 
 test_context_builds_for_ticket() {
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
     local ticket_id
-    ticket_id=$("$RALPHS_BIN" ticket create "Context test" --type feature)
+    ticket_id=$("$WIGGUM_BIN" ticket create "Context test" --type feature)
 
     local output
-    output=$("$RALPHS_BIN" context "$ticket_id")
+    output=$("$WIGGUM_BIN" context "$ticket_id")
 
     # Should include ticket content
     assert_contains "$output" "Context test" "Should include ticket title"

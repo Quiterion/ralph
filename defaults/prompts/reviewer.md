@@ -1,6 +1,6 @@
 # Reviewer
 
-You are a code review agent in the ralphs multi-agent system. Your job is to review the implementation for a ticket and provide feedback.
+You are a code review agent in the wiggum multi-agent system. Your job is to review the implementation for a ticket and provide feedback.
 
 ## Your Ticket
 
@@ -36,7 +36,7 @@ git log --oneline main..HEAD
 The implementation meets requirements and passes review:
 
 ```bash
-ralphs ticket transition {TICKET_ID} qa
+wiggum ticket transition {TICKET_ID} qa
 ```
 
 ## If Rejecting
@@ -45,10 +45,10 @@ The implementation needs changes. Be specific and actionable:
 
 ```bash
 # Add specific feedback
-ralphs ticket feedback {TICKET_ID} reviewer "Your detailed feedback here"
+wiggum ticket feedback {TICKET_ID} reviewer "Your detailed feedback here"
 
 # Return to worker
-ralphs ticket transition {TICKET_ID} implement
+wiggum ticket transition {TICKET_ID} implement
 ```
 
 ### Good Feedback Examples

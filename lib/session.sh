@@ -9,7 +9,7 @@ session_exists() {
     tmux has-session -t "$session" 2>/dev/null
 }
 
-# Initialize a new ralphs project
+# Initialize a new wiggum project
 cmd_init() {
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -21,13 +21,13 @@ cmd_init() {
         esac
     done
 
-    # Check if already in a ralphs project (handles running from subdirs or .ralphs/tickets/)
+    # Check if already in a wiggum project (handles running from subdirs or .wiggum/tickets/)
     local project_root
     if project_root=$(get_project_root 2>/dev/null); then
-        info "Already in ralphs project at $project_root"
+        info "Already in wiggum project at $project_root"
         cd "$project_root" || exit "$EXIT_ERROR"
     else
-        # Find git root - ralphs must be initialized at the repo root
+        # Find git root - wiggum must be initialized at the repo root
         local git_root
         if ! git_root=$(get_git_root); then
             error "Not in a git repository. Run 'git init' first."
@@ -37,35 +37,35 @@ cmd_init() {
         cd "$git_root" || exit "$EXIT_ERROR"
     fi
 
-    # Create .ralphs directory structure
-    local ralphs_dir=".ralphs"
+    # Create .wiggum directory structure
+    local wiggum_dir=".wiggum"
 
-    if [[ -d "$ralphs_dir" ]]; then
-        info "ralphs directory already exists"
+    if [[ -d "$wiggum_dir" ]]; then
+        info "wiggum directory already exists"
     else
-        info "Creating ralphs directory structure..."
-        mkdir -p "$ralphs_dir/hooks"
-        mkdir -p "$ralphs_dir/prompts"
+        info "Creating wiggum directory structure..."
+        mkdir -p "$wiggum_dir/hooks"
+        mkdir -p "$wiggum_dir/prompts"
     fi
 
-    # Set PROJECT_ROOT and RALPHS_DIR for sync functions
+    # Set PROJECT_ROOT and WIGGUM_DIR for sync functions
     PROJECT_ROOT="$(pwd)"
-    RALPHS_DIR="$PROJECT_ROOT/.ralphs"
-    TICKETS_DIR="$RALPHS_DIR/tickets"
-    export PROJECT_ROOT RALPHS_DIR TICKETS_DIR
+    WIGGUM_DIR="$PROJECT_ROOT/.wiggum"
+    TICKETS_DIR="$WIGGUM_DIR/tickets"
+    export PROJECT_ROOT WIGGUM_DIR TICKETS_DIR
 
     # Initialize bare tickets repository
     init_bare_tickets_repo
 
-    # Clone tickets to local .ralphs/tickets for main worktree
+    # Clone tickets to local .wiggum/tickets for main worktree
     if [[ ! -d "$TICKETS_DIR/.git" ]]; then
-        clone_tickets_to_worktree "$RALPHS_DIR"
+        clone_tickets_to_worktree "$WIGGUM_DIR"
     fi
 
     # Add to .gitignore
     local gitignore=".gitignore"
     [[ -f "$gitignore" ]] || touch "$gitignore"
-    local entries=(".ralphs/tickets.git/" ".ralphs/tickets/" "worktrees/")
+    local entries=(".wiggum/tickets.git/" ".wiggum/tickets/" "worktrees/")
     for entry in "${entries[@]}"; do
         if ! grep -qxF "$entry" "$gitignore" 2>/dev/null; then
             echo "$entry" >> "$gitignore"
@@ -73,34 +73,34 @@ cmd_init() {
     done
 
     # Write config if not exists
-    if [[ ! -f "$ralphs_dir/config.sh" ]]; then
-        write_default_config "$ralphs_dir/config.sh"
+    if [[ ! -f "$wiggum_dir/config.sh" ]]; then
+        write_default_config "$wiggum_dir/config.sh"
         success "Created config.sh"
     fi
 
     # Copy default hooks if not present
-    for hook in on-claim on-in-progress-done on-review-done on-review-rejected on-qa-done on-qa-rejected on-close; do
-        if [[ ! -f "$ralphs_dir/hooks/$hook" ]] && [[ -f "$RALPHS_DEFAULTS/hooks/$hook" ]]; then
-            cp "$RALPHS_DEFAULTS/hooks/$hook" "$ralphs_dir/hooks/"
-            chmod +x "$ralphs_dir/hooks/$hook"
+    for hook in on-claim on-draft-done on-review-done on-review-rejected on-qa-done on-qa-rejected on-close; do
+        if [[ ! -f "$wiggum_dir/hooks/$hook" ]] && [[ -f "$WIGGUM_DEFAULTS/hooks/$hook" ]]; then
+            cp "$WIGGUM_DEFAULTS/hooks/$hook" "$wiggum_dir/hooks/"
+            chmod +x "$wiggum_dir/hooks/$hook"
         fi
     done
     success "Hooks initialized"
 
     # Copy default prompts if not present
     for prompt in supervisor.md worker.md reviewer.md qa.md; do
-        if [[ ! -f "$ralphs_dir/prompts/$prompt" ]] && [[ -f "$RALPHS_DEFAULTS/prompts/$prompt" ]]; then
-            cp "$RALPHS_DEFAULTS/prompts/$prompt" "$ralphs_dir/prompts/"
+        if [[ ! -f "$wiggum_dir/prompts/$prompt" ]] && [[ -f "$WIGGUM_DEFAULTS/prompts/$prompt" ]]; then
+            cp "$WIGGUM_DEFAULTS/prompts/$prompt" "$wiggum_dir/prompts/"
         fi
     done
     success "Prompts initialized"
 
-    success "ralphs initialized"
+    success "wiggum initialized"
     echo ""
     echo "Next steps:"
-    echo "  ralphs ticket create \"Your first task\" --type feature"
-    echo "  ralphs spawn supervisor"
-    echo "  ralphs attach"
+    echo "  wiggum ticket create \"Your first task\" --type feature"
+    echo "  wiggum spawn supervisor"
+    echo "  wiggum attach"
 }
 
 # Attach to an existing session
@@ -121,14 +121,14 @@ cmd_attach() {
     done
 
     load_config
-    [[ -n "$session_name" ]] && RALPHS_SESSION="$session_name"
+    [[ -n "$session_name" ]] && WIGGUM_SESSION="$session_name"
 
-    if ! session_exists "$RALPHS_SESSION"; then
-        error "Session '$RALPHS_SESSION' not found"
+    if ! session_exists "$WIGGUM_SESSION"; then
+        error "Session '$WIGGUM_SESSION' not found"
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
-    tmux attach-session -t "$RALPHS_SESSION"
+    tmux attach-session -t "$WIGGUM_SESSION"
 }
 
 # Tear down the session
@@ -150,22 +150,22 @@ cmd_teardown() {
 
     load_config
 
-    if ! session_exists "$RALPHS_SESSION"; then
-        error "Session '$RALPHS_SESSION' not found"
+    if ! session_exists "$WIGGUM_SESSION"; then
+        error "Session '$WIGGUM_SESSION' not found"
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Check for active workers unless force
     if [[ "$force" != "true" ]]; then
         local pane_count
-    pane_count=$(tmux list-panes -t "$RALPHS_SESSION" 2>/dev/null | wc -l)
+    pane_count=$(tmux list-panes -t "$WIGGUM_SESSION" 2>/dev/null | wc -l)
         if [[ $pane_count -gt 1 ]]; then
             warn "Active workers detected. Use --force to kill anyway."
             exit "$EXIT_ERROR"
         fi
     fi
 
-    info "Tearing down session: $RALPHS_SESSION"
-    tmux kill-session -t "$RALPHS_SESSION"
+    info "Tearing down session: $WIGGUM_SESSION"
+    tmux kill-session -t "$WIGGUM_SESSION"
     success "Session terminated"
 }

@@ -24,7 +24,7 @@ fi
 
 # Logging functions
 log() {
-    [[ "$RALPHS_QUIET" == "true" ]] && return
+    [[ "$WIGGUM_QUIET" == "true" ]] && return
     echo -e "$@"
 }
 
@@ -46,7 +46,7 @@ error() {
 
 debug() {
     # shellcheck disable=SC2015
-    [[ "$RALPHS_VERBOSE" == "true" ]] && log "${CYAN}[debug]${NC} $*" || true
+    [[ "$WIGGUM_VERBOSE" == "true" ]] && log "${CYAN}[debug]${NC} $*" || true
 }
 
 # Generate a short random ID (4 hex chars)
@@ -83,9 +83,9 @@ duration_since() {
         echo "$((diff / 60))m"
     else
         local hours
-    hours=$((diff / 3600))
+        hours=$((diff / 3600))
         local mins
-    mins=$(((diff % 3600) / 60))
+        mins=$(((diff % 3600) / 60))
         echo "${hours}h ${mins}m"
     fi
 }
@@ -95,12 +95,12 @@ get_git_root() {
     git rev-parse --show-toplevel 2>/dev/null
 }
 
-# Get project root (directory containing .ralphs/)
+# Get project root (directory containing .wiggum/)
 # shellcheck disable=SC2120  # Function accepts optional arg with default
 get_project_root() {
     local dir="${1:-$(pwd)}"
     while [[ "$dir" != "/" ]]; do
-        if [[ -d "$dir/.ralphs" ]]; then
+        if [[ -d "$dir/.wiggum" ]]; then
             echo "$dir"
             return 0
         fi
@@ -111,6 +111,7 @@ get_project_root() {
 
 # Get main project root (handles worktrees - returns parent of worktrees/)
 # Use this for shared resources: config.sh, panes.json, hooks, prompts
+# shellcheck disable=SC2120  # Function accepts optional arg with default
 get_main_project_root() {
     local project_root
     if ! project_root=$(get_project_root "$@"); then
@@ -123,26 +124,26 @@ get_main_project_root() {
     echo "$project_root"
 }
 
-# Ensure we're in a ralphs project
+# Ensure we're in a wiggum project
 require_project() {
     if ! PROJECT_ROOT=$(get_project_root); then
-        error "Not in a ralphs project. Run 'ralphs init' first."
+        error "Not in a wiggum project. Run 'wiggum init' first."
         exit "$EXIT_ERROR"
     fi
 
     # Main project root (for shared resources like config, panes.json)
     MAIN_PROJECT_ROOT=$(get_main_project_root)
-    MAIN_RALPHS_DIR="$MAIN_PROJECT_ROOT/.ralphs"
+    MAIN_WIGGUM_DIR="$MAIN_PROJECT_ROOT/.wiggum"
 
     # Current context (may be worktree)
-    RALPHS_DIR="$PROJECT_ROOT/.ralphs"
-    TICKETS_DIR="$RALPHS_DIR/tickets"
+    WIGGUM_DIR="$PROJECT_ROOT/.wiggum"
+    TICKETS_DIR="$WIGGUM_DIR/tickets"
 
     # Shared resources come from main project
-    HOOKS_DIR="$MAIN_RALPHS_DIR/hooks"
-    PROMPTS_DIR="$MAIN_RALPHS_DIR/prompts"
+    HOOKS_DIR="$MAIN_WIGGUM_DIR/hooks"
+    PROMPTS_DIR="$MAIN_WIGGUM_DIR/prompts"
 
-    export PROJECT_ROOT MAIN_PROJECT_ROOT RALPHS_DIR MAIN_RALPHS_DIR TICKETS_DIR HOOKS_DIR PROMPTS_DIR
+    export PROJECT_ROOT MAIN_PROJECT_ROOT WIGGUM_DIR MAIN_WIGGUM_DIR TICKETS_DIR HOOKS_DIR PROMPTS_DIR
 }
 
 # Match partial ticket ID
@@ -161,7 +162,7 @@ resolve_ticket_id() {
     for f in "$TICKETS_DIR"/*.md; do
         [[ -f "$f" ]] || continue
         local name
-    name=$(basename "$f" .md)
+        name=$(basename "$f" .md)
         if [[ "$name" == *"$partial"* ]]; then
             matches+=("$name")
         fi
@@ -210,7 +211,7 @@ set_frontmatter_value() {
             next
         }
         { print }
-    ' "$file" > "$temp"
+    ' "$file" >"$temp"
     mv "$temp" "$file"
 }
 

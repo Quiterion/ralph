@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/framework.sh"
 
 test_help() {
     local output
-    output=$("$RALPHS_BIN" --help)
+    output=$("$WIGGUM_BIN" --help)
     assert_contains "$output" "Usage:" "Help should show usage"
     assert_contains "$output" "Session Management:" "Help should list session commands"
     assert_contains "$output" "Ticket Management:" "Help should list ticket commands"
@@ -24,12 +24,12 @@ test_help() {
 
 test_version() {
     local output
-    output=$("$RALPHS_BIN" --version)
-    assert_contains "$output" "ralphs" "Version should mention ralphs"
+    output=$("$WIGGUM_BIN" --version)
+    assert_contains "$output" "wiggum" "Version should mention wiggum"
 }
 
 test_unknown_command() {
-    if "$RALPHS_BIN" nonexistent 2>/dev/null; then
+    if "$WIGGUM_BIN" nonexistent 2>/dev/null; then
         echo "Should fail on unknown command"
         return 1
     fi

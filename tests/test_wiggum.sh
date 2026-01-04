@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# test_ralphs.sh - Main test runner for ralphs CLI
+# test_wiggum.sh - Main test runner for wiggum CLI
 #
 # Usage:
-#   ./tests/test_ralphs.sh           # Run all tests
-#   ./tests/test_ralphs.sh [filter]  # Run tests matching filter
-#   ./tests/test_ralphs.sh cli       # Run only CLI tests
-#   ./tests/test_ralphs.sh ticket    # Run only ticket tests
+#   ./tests/test_wiggum.sh           # Run all tests
+#   ./tests/test_wiggum.sh [filter]  # Run tests matching filter
+#   ./tests/test_wiggum.sh cli       # Run only CLI tests
+#   ./tests/test_wiggum.sh ticket    # Run only ticket tests
 #
 
 set -euo pipefail
@@ -39,7 +39,7 @@ main() {
     local filter="${1:-}"
 
     echo ""
-    echo "Running ralphs tests..."
+    echo "Running wiggum tests..."
     echo ""
 
     # Set up exit trap

@@ -112,7 +112,7 @@ declare -A TRANSITIONS=(
 # Ticket subcommand router
 cmd_ticket() {
     if [[ $# -eq 0 ]]; then
-        error "Usage: ralphs ticket <subcommand>"
+        error "Usage: wiggum ticket <subcommand>"
         echo "Subcommands: create, list, show, ready, blocked, tree, claim, transition, edit, feedback"
         exit "$EXIT_INVALID_ARGS"
     fi
@@ -164,7 +164,7 @@ cmd_ticket() {
 # Create a new ticket
 ticket_create() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs ticket create <title> [--type TYPE] [--priority N] [--dep ID]"
+        error "Usage: wiggum ticket create <title> [--type TYPE] [--priority N] [--dep ID]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -321,7 +321,7 @@ ticket_list() {
 # Show ticket details
 ticket_show() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs ticket show <id>"
+        error "Usage: wiggum ticket show <id>"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -441,7 +441,7 @@ ticket_blocked() {
 # Show dependency tree
 ticket_tree() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs ticket tree <id>"
+        error "Usage: wiggum ticket tree <id>"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -493,7 +493,7 @@ _print_tree() {
 # Claim a ticket
 ticket_claim() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs ticket claim <id>"
+        error "Usage: wiggum ticket claim <id>"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -527,7 +527,7 @@ ticket_claim() {
 # Transition ticket state
 ticket_transition() {
     if [[ $# -lt 2 ]]; then
-        error "Usage: ralphs ticket transition <id> <state> [--no-hooks] [--no-sync]"
+        error "Usage: wiggum ticket transition <id> <state> [--no-hooks] [--no-sync]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -591,7 +591,7 @@ ticket_transition() {
     local hook_name=""
     case "$new_state" in
         review)
-            hook_name="on-in-progress-done"
+            hook_name="on-draft-done"
             ;;
         qa)
             hook_name="on-review-done"
@@ -609,12 +609,12 @@ ticket_transition() {
     esac
 
     # Export context for hooks
-    export RALPHS_TICKET_ID="$id"
-    export RALPHS_TICKET_PATH="$ticket_path"
-    export RALPHS_PREV_STATE="$current_state"
-    export RALPHS_NEW_STATE="$new_state"
-    RALPHS_PANE=$(get_frontmatter_value "$ticket_path" "assigned_pane")
-    export RALPHS_PANE
+    export WIGGUM_TICKET_ID="$id"
+    export WIGGUM_TICKET_PATH="$ticket_path"
+    export WIGGUM_PREV_STATE="$current_state"
+    export WIGGUM_NEW_STATE="$new_state"
+    WIGGUM_PANE=$(get_frontmatter_value "$ticket_path" "assigned_pane")
+    export WIGGUM_PANE
 
     # Run hook
     if [[ "$skip_hooks" != "true" ]] && [[ -n "$hook_name" ]]; then
@@ -636,7 +636,7 @@ ticket_transition() {
 # Edit ticket in editor
 ticket_edit() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs ticket edit <id>"
+        error "Usage: wiggum ticket edit <id>"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -646,13 +646,13 @@ ticket_edit() {
     load_config
 
     local ticket_path="$TICKETS_DIR/${id}.md"
-    ${RALPHS_EDITOR} "$ticket_path"
+    ${WIGGUM_EDITOR} "$ticket_path"
 }
 
 # Add feedback to ticket
 ticket_feedback() {
     if [[ $# -lt 3 ]]; then
-        error "Usage: ralphs ticket feedback <id> <source> <message>"
+        error "Usage: wiggum ticket feedback <id> <source> <message>"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -698,8 +698,8 @@ $message
     pane=$(get_frontmatter_value "$ticket_path" "assigned_pane")
     if [[ -n "$pane" ]]; then
         load_config
-        if session_exists "$RALPHS_SESSION"; then
-            tmux send-keys -t "$RALPHS_SESSION:main" "# Feedback added to your ticket. Please address." Enter 2>/dev/null || true
+        if session_exists "$WIGGUM_SESSION"; then
+            tmux send-keys -t "$WIGGUM_SESSION:main" "# Feedback added to your ticket. Please address." Enter 2>/dev/null || true
         fi
     fi
 

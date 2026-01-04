@@ -2,18 +2,18 @@
 
 Hooks are shell scripts triggered by ticket state transitions. They encode the pipeline logic—when implementation finishes, spawn a reviewer; when review passes, spawn QA; etc.
 
-Hooks are **git-style**, not agent-specific. This keeps ralphs agent-agnostic: any inner harness that can read/write files works.
+Hooks are **git-style**, not agent-specific. This keeps wiggum agent-agnostic: any inner harness that can read/write files works.
 
 ---
 
 ## Location
 
-Hooks live in `.ralphs/hooks/`:
+Hooks live in `.wiggum/hooks/`:
 
 ```
-.ralphs/hooks/
+.wiggum/hooks/
 ├── on-claim
-├── on-in-progress-done
+├── on-draft-done
 ├── on-review-done
 ├── on-review-rejected
 ├── on-qa-done
@@ -21,12 +21,12 @@ Hooks live in `.ralphs/hooks/`:
 └── on-close
 ```
 
-**Note:** There are two hook systems in ralphs:
+**Note:** There are two hook systems in wiggum:
 
-1. **State transition hooks** (this document) — `.ralphs/hooks/` — your pipeline logic
-2. **Git hooks** — `.ralphs/tickets.git/hooks/` — internal plumbing
+1. **State transition hooks** (this document) — `.wiggum/hooks/` — your pipeline logic
+2. **Git hooks** — `.wiggum/tickets.git/hooks/` — internal plumbing
 
-The git hooks (`pre-receive`, `post-receive`) in the bare ticket repo handle validation and trigger the state transition hooks automatically. You typically only write state transition hooks; the git hooks are installed by `ralphs init`.
+The git hooks (`pre-receive`, `post-receive`) in the bare ticket repo handle validation and trigger the state transition hooks automatically. You typically only write state transition hooks; the git hooks are installed by `wiggum init`.
 
 See [tickets.md](./tickets.md#sync--distribution) for details on the git hook internals.
 
@@ -37,7 +37,7 @@ See [tickets.md](./tickets.md#sync--distribution) for details on the git hook in
 | Hook | Trigger | Typical Use |
 |------|---------|-------------|
 | `on-claim` | Ticket in-progress by worker | Log, notify, setup |
-| `on-in-progress-done` | Worker finishes implementation | Spawn reviewer |
+| `on-draft-done` | Worker finishes implementation | Spawn reviewer |
 | `on-review-done` | Reviewer approves | Spawn QA agent |
 | `on-review-rejected` | Reviewer rejects | Inject feedback, ping worker |
 | `on-qa-done` | QA passes | Close ticket |
@@ -59,30 +59,30 @@ $1 = ticket ID
 ### Environment Variables
 
 ```bash
-RALPHS_TICKET_ID     # Same as $1
-RALPHS_TICKET_PATH   # Full path to ticket file
-RALPHS_PREV_STATE    # State before transition
-RALPHS_NEW_STATE     # State after transition
-RALPHS_PANE          # Pane that triggered transition (if any)
-RALPHS_SESSION       # tmux session name
+WIGGUM_TICKET_ID     # Same as $1
+WIGGUM_TICKET_PATH   # Full path to ticket file
+WIGGUM_PREV_STATE    # State before transition
+WIGGUM_NEW_STATE     # State after transition
+WIGGUM_PANE          # Pane that triggered transition (if any)
+WIGGUM_SESSION       # tmux session name
 ```
 
 ---
 
 ## Example Hooks
 
-### on-in-progress-done
+### on-draft-done
 
 Spawn a review agent when implementation completes:
 
 ```bash
 #!/bin/bash
-# .ralphs/hooks/on-in-progress-done
+# .wiggum/hooks/on-draft-done
 
 TICKET_ID="$1"
 
 echo "[hook] Implementation done for $TICKET_ID, spawning reviewer"
-ralphs spawn reviewer "$TICKET_ID"
+wiggum spawn reviewer "$TICKET_ID"
 ```
 
 ### on-review-rejected
@@ -91,19 +91,19 @@ Inject feedback and ping the worker:
 
 ```bash
 #!/bin/bash
-# .ralphs/hooks/on-review-rejected
+# .wiggum/hooks/on-review-rejected
 
 TICKET_ID="$1"
-IMPL_PANE="$RALPHS_PANE"
+IMPL_PANE="$WIGGUM_PANE"
 
 echo "[hook] Review rejected for $TICKET_ID"
 
 # Transition back to in-progress
-ralphs ticket transition "$TICKET_ID" in-progress
+wiggum ticket transition "$TICKET_ID" in-progress
 
 # Ping the original worker (if still running)
 if [[ -n "$IMPL_PANE" ]]; then
-  ralphs ping "$IMPL_PANE" "Review feedback added to your ticket. Please address."
+  wiggum ping "$IMPL_PANE" "Review feedback added to your ticket. Please address."
 fi
 ```
 
@@ -113,17 +113,17 @@ Close the ticket and optionally tag a release:
 
 ```bash
 #!/bin/bash
-# .ralphs/hooks/on-qa-done
+# .wiggum/hooks/on-qa-done
 
 TICKET_ID="$1"
 
 echo "[hook] QA passed for $TICKET_ID"
 
 # Close the ticket
-ralphs ticket transition "$TICKET_ID" done
+wiggum ticket transition "$TICKET_ID" done
 
 # Check if all tickets are done, maybe tag release
-if [[ -z "$(ralphs ticket list --state in-progress,review,qa)" ]]; then
+if [[ -z "$(wiggum ticket list --state in-progress,review,qa)" ]]; then
   echo "[hook] All tickets complete, tagging release"
   # Increment patch version
   LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
@@ -138,10 +138,10 @@ Log metrics and cleanup:
 
 ```bash
 #!/bin/bash
-# .ralphs/hooks/on-close
+# .wiggum/hooks/on-close
 
 TICKET_ID="$1"
-TICKET_PATH="$RALPHS_TICKET_PATH"
+TICKET_PATH="$WIGGUM_TICKET_PATH"
 
 # Calculate cycle time
 CREATED=$(grep 'created_at:' "$TICKET_PATH" | cut -d' ' -f2)
@@ -156,18 +156,18 @@ echo "[metrics] $TICKET_ID closed. Created: $CREATED, Closed: $CLOSED"
 
 ## Hook Execution
 
-Hooks are executed by ralphs when state transitions occur:
+Hooks are executed by wiggum when state transitions occur:
 
-1. Worker calls `ralphs ticket transition <id> <state>`
-2. ralphs validates the transition
-3. ralphs updates the ticket file
-4. ralphs executes the appropriate hook (if present)
+1. Worker calls `wiggum ticket transition <id> <state>`
+2. wiggum validates the transition
+3. wiggum updates the ticket file
+4. wiggum executes the appropriate hook (if present)
 5. Hook runs with full context available
 6. Transition completes when hook script exits
 
 ### Synchronous Script, Asynchronous Agents
 
-The hook *script* runs synchronously—the transition waits for the script to exit. However, `ralphs spawn` returns immediately after creating the pane. Spawned agents run asynchronously, decoupled from the hook.
+The hook *script* runs synchronously—the transition waits for the script to exit. However, `wiggum spawn` returns immediately after creating the pane. Spawned agents run asynchronously, decoupled from the hook.
 
 ```
 transition to `qa`
@@ -176,7 +176,7 @@ transition to `qa`
 ┌─────────────────────────┐
 │ on-review-done hook     │
 │                         │
-│  ralphs spawn qa $TK_ID │───▶ (pane created, returns immediately)
+│  wiggum spawn qa $TK_ID │───▶ (pane created, returns immediately)
 │  echo "spawned"         │              │
 │  exit 0                 │              │
 └─────────────────────────┘              │
@@ -194,13 +194,13 @@ This means:
 
 ## Default Hooks
 
-ralphs ships with sensible default hooks that in-progress the standard pipeline:
+wiggum ships with sensible default hooks that in-progress the standard pipeline:
 
 ```
 in-progress → review → qa → done
 ```
 
-Users can override by placing their own scripts in `.ralphs/hooks/`. The harness checks for user hooks first, falls back to defaults.
+Users can override by placing their own scripts in `.wiggum/hooks/`. The harness checks for user hooks first, falls back to defaults.
 
 ---
 
@@ -209,7 +209,7 @@ Users can override by placing their own scripts in `.ralphs/hooks/`. The harness
 To skip hooks for a transition:
 
 ```bash
-ralphs ticket transition <id> <state> --no-hooks
+wiggum ticket transition <id> <state> --no-hooks
 ```
 
 Useful for manual intervention or recovery scenarios.

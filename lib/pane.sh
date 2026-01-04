@@ -4,16 +4,16 @@
 #
 
 # Track pane assignments in a file
-PANE_REGISTRY_FILE=".ralphs/panes.json"
+PANE_REGISTRY_FILE=".wiggum/panes.json"
 
 # Send input to a pane, handling editor mode (vim/emacs keybinds)
 # Usage: send_pane_input <session:window.pane> <message>
-# Respects RALPHS_EDITOR_MODE config: "normal" (default), "vim", "emacs"
+# Respects WIGGUM_EDITOR_MODE config: "normal" (default), "vim", "emacs"
 send_pane_input() {
     local target="$1"
     local message="$2"
 
-    if [[ "${RALPHS_EDITOR_MODE:-normal}" == "vim" ]]; then
+    if [[ "${WIGGUM_EDITOR_MODE:-normal}" == "vim" ]]; then
         # Vim mode: Escape to ensure normal mode, 'i' to insert, type message, Enter to submit
         tmux send-keys -t "$target" Escape
         sleep 0.2
@@ -114,14 +114,14 @@ build_agent_prompt() {
     local prompt_path="$PROMPTS_DIR/${role}.md"
     if [[ -f "$prompt_path" ]]; then
         template=$(cat "$prompt_path")
-    elif [[ -f "$RALPHS_DEFAULTS/prompts/${role}.md" ]]; then
-        template=$(cat "$RALPHS_DEFAULTS/prompts/${role}.md")
+    elif [[ -f "$WIGGUM_DEFAULTS/prompts/${role}.md" ]]; then
+        template=$(cat "$WIGGUM_DEFAULTS/prompts/${role}.md")
     else
         # No template found, return minimal prompt
         if [[ -n "$ticket_id" ]]; then
-            echo "You are a $role agent. Your ticket is $ticket_id. Read the ticket at .ralphs/tickets/${ticket_id}.md and complete the work described."
+            echo "You are a $role agent. Your ticket is $ticket_id. Read the ticket at .wiggum/tickets/${ticket_id}.md and complete the work described."
         else
-            echo "You are a $role agent for the ralphs multi-agent system."
+            echo "You are a $role agent for the wiggum multi-agent system."
         fi
         return
     fi
@@ -166,7 +166,7 @@ build_agent_prompt() {
 # Spawn an agent in a new pane
 cmd_spawn() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs spawn <role> [ticket-id] [--prompt PATH]"
+        error "Usage: wiggum spawn <role> [ticket-id] [--prompt PATH]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -181,9 +181,9 @@ cmd_spawn() {
     require_command tmux
 
     # Create session if it doesn't exist
-    if ! session_exists "$RALPHS_SESSION"; then
-        info "Creating tmux session: $RALPHS_SESSION"
-        tmux new-session -d -s "$RALPHS_SESSION" -n "main"
+    if ! session_exists "$WIGGUM_SESSION"; then
+        info "Creating tmux session: $WIGGUM_SESSION"
+        tmux new-session -d -s "$WIGGUM_SESSION" -n "main"
     fi
 
     # Supervisor doesn't need a ticket
@@ -205,7 +205,7 @@ cmd_spawn() {
     local pane_name="${role}-${pane_index}"
 
     # Build the agent command
-    local agent_cmd="$RALPHS_AGENT_CMD"
+    local agent_cmd="$WIGGUM_AGENT_CMD"
 
     # Create a worktree for the agent
     local worktree_path="$PROJECT_ROOT/worktrees/$pane_name"
@@ -215,54 +215,54 @@ cmd_spawn() {
         git worktree add "$worktree_path" -b "$pane_name" --quiet 2>/dev/null || \
             git worktree add "$worktree_path" "$pane_name" --quiet 2>/dev/null || true
 
-        # Create .ralphs directory structure in worktree
-        mkdir -p "$worktree_path/.ralphs/hooks"
-        mkdir -p "$worktree_path/.ralphs/prompts"
+        # Create .wiggum directory structure in worktree
+        mkdir -p "$worktree_path/.wiggum/hooks"
+        mkdir -p "$worktree_path/.wiggum/prompts"
 
         # Clone tickets repo into worktree
-        clone_tickets_to_worktree "$worktree_path/.ralphs"
+        clone_tickets_to_worktree "$worktree_path/.wiggum"
 
         # Copy hooks and prompts
         # shellcheck disable=SC2015
-        [[ -d "$RALPHS_DIR/hooks" ]] && cp -r "$RALPHS_DIR/hooks/"* "$worktree_path/.ralphs/hooks/" 2>/dev/null || true
+        [[ -d "$WIGGUM_DIR/hooks" ]] && cp -r "$WIGGUM_DIR/hooks/"* "$worktree_path/.wiggum/hooks/" 2>/dev/null || true
         # shellcheck disable=SC2015
-        [[ -d "$RALPHS_DIR/prompts" ]] && cp -r "$RALPHS_DIR/prompts/"* "$worktree_path/.ralphs/prompts/" 2>/dev/null || true
+        [[ -d "$WIGGUM_DIR/prompts" ]] && cp -r "$WIGGUM_DIR/prompts/"* "$worktree_path/.wiggum/prompts/" 2>/dev/null || true
     fi
 
     # Create new pane
     info "Spawning $pane_name${ticket_id:+ for $ticket_id}..."
 
     # Split window to create new pane
-    tmux split-window -t "$RALPHS_SESSION:main" -h
+    tmux split-window -t "$WIGGUM_SESSION:main" -h
     local new_pane
-    new_pane=$(tmux display-message -t "$RALPHS_SESSION:main" -p '#{pane_index}')
+    new_pane=$(tmux display-message -t "$WIGGUM_SESSION:main" -p '#{pane_index}')
 
     # Set pane title
-    tmux select-pane -t "$RALPHS_SESSION:main.$new_pane" -T "$pane_name"
+    tmux select-pane -t "$WIGGUM_SESSION:main.$new_pane" -T "$pane_name"
 
     # Change to worktree directory
-    tmux send-keys -t "$RALPHS_SESSION:main.$new_pane" "cd '$worktree_path'" Enter
+    tmux send-keys -t "$WIGGUM_SESSION:main.$new_pane" "cd '$worktree_path'" Enter
 
     # Build the agent prompt
     local prompt
     prompt=$(build_agent_prompt "$role" "$ticket_id" "$worktree_path")
 
     # Write prompt to a file in the worktree for the agent to read
-    local prompt_file="$worktree_path/.ralphs/current_prompt.md"
+    local prompt_file="$worktree_path/.wiggum/current_prompt.md"
     echo "$prompt" > "$prompt_file"
 
     # Start the agent
-    tmux send-keys -t "$RALPHS_SESSION:main.$new_pane" "$agent_cmd" Enter
+    tmux send-keys -t "$WIGGUM_SESSION:main.$new_pane" "$agent_cmd" Enter
 
     # Wait for agent to initialize (give it time to show welcome banner)
     sleep 2
 
     # Send the initial prompt using vim-safe input
-    local initial_msg="Please read your role instructions from .ralphs/current_prompt.md and begin your work. Your role is: $role${ticket_id:+, assigned ticket: $ticket_id}"
-    send_pane_input "$RALPHS_SESSION:main.$new_pane" "$initial_msg"
+    local initial_msg="Please read your role instructions from .wiggum/current_prompt.md and begin your work. Your role is: $role${ticket_id:+, assigned ticket: $ticket_id}"
+    send_pane_input "$WIGGUM_SESSION:main.$new_pane" "$initial_msg"
 
     # Apply layout
-    tmux select-layout -t "$RALPHS_SESSION:main" "$RALPHS_LAYOUT" 2>/dev/null || true
+    tmux select-layout -t "$WIGGUM_SESSION:main" "$WIGGUM_LAYOUT" 2>/dev/null || true
 
     # Register the pane
     register_pane "$pane_name" "$role" "$ticket_id"
@@ -305,7 +305,7 @@ cmd_list() {
     require_project
     load_config
 
-    if ! session_exists "$RALPHS_SESSION"; then
+    if ! session_exists "$WIGGUM_SESSION"; then
         error "Session not found"
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
@@ -372,7 +372,7 @@ cmd_list() {
 # Kill a worker pane
 cmd_kill() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs kill <pane-id> [--release-ticket]"
+        error "Usage: wiggum kill <pane-id> [--release-ticket]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -395,7 +395,7 @@ cmd_kill() {
     require_project
     load_config
 
-    if ! session_exists "$RALPHS_SESSION"; then
+    if ! session_exists "$WIGGUM_SESSION"; then
         error "Session not found"
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
@@ -414,7 +414,7 @@ cmd_kill() {
 
     # Find and kill the tmux pane by title
     local panes
-    panes=$(tmux list-panes -t "$RALPHS_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
+    panes=$(tmux list-panes -t "$WIGGUM_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
     local target_pane=""
 
     while IFS= read -r line; do
@@ -429,7 +429,7 @@ cmd_kill() {
     done <<< "$panes"
 
     if [[ -n "$target_pane" ]]; then
-        tmux kill-pane -t "$RALPHS_SESSION:main.$target_pane"
+        tmux kill-pane -t "$WIGGUM_SESSION:main.$target_pane"
         info "Killed tmux pane"
     fi
 
@@ -449,7 +449,7 @@ cmd_kill() {
 # Send a message to a worker pane
 cmd_ping() {
     if [[ $# -lt 2 ]]; then
-        error "Usage: ralphs ping <pane-id> <message>"
+        error "Usage: wiggum ping <pane-id> <message>"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -460,14 +460,14 @@ cmd_ping() {
     require_project
     load_config
 
-    if ! session_exists "$RALPHS_SESSION"; then
+    if ! session_exists "$WIGGUM_SESSION"; then
         error "Session not found"
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Find pane by title
     local panes
-    panes=$(tmux list-panes -t "$RALPHS_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
+    panes=$(tmux list-panes -t "$WIGGUM_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
     local target_pane=""
 
     while IFS= read -r line; do
@@ -487,7 +487,7 @@ cmd_ping() {
     fi
 
     # Send the message using vim-safe input
-    send_pane_input "$RALPHS_SESSION:main.$target_pane" "$message"
+    send_pane_input "$WIGGUM_SESSION:main.$target_pane" "$message"
 
     success "Pinged $pane_id"
 }
@@ -506,7 +506,7 @@ cmd_has_capacity() {
         current=$((current > 0 ? current - 1 : 0))
     fi
 
-    if [[ $current -lt $RALPHS_MAX_AGENTS ]]; then
+    if [[ $current -lt $WIGGUM_MAX_AGENTS ]]; then
         echo "true"
         return 0
     else

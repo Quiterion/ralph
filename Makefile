@@ -1,4 +1,4 @@
-# ralphs - Multi-Agent Orchestration Harness
+# wiggum - Multi-Agent Orchestration Harness
 #
 # Installation targets
 
@@ -8,11 +8,11 @@ BINDIR := $(PREFIX)/bin
 .PHONY: install uninstall test check help
 
 help:
-	@echo "ralphs - Multi-Agent Orchestration Harness"
+	@echo "wiggum - Multi-Agent Orchestration Harness"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make install    Install ralphs (symlink to $(BINDIR))"
-	@echo "  make uninstall  Remove ralphs from $(BINDIR)"
+	@echo "  make install    Install wiggum (symlink to $(BINDIR))"
+	@echo "  make uninstall  Remove wiggum from $(BINDIR)"
 	@echo "  make test       Run test suite"
 	@echo "  make check      Run shellcheck on all scripts"
 	@echo ""
@@ -25,19 +25,19 @@ help:
 	@echo "  sudo make install             # System-wide install"
 
 install:
-	@echo "Installing ralphs to $(BINDIR)..."
+	@echo "Installing wiggum to $(BINDIR)..."
 	@mkdir -p $(BINDIR)
-	@ln -sf $(CURDIR)/bin/ralphs $(BINDIR)/ralphs
+	@ln -sf $(CURDIR)/bin/wiggum $(BINDIR)/wiggum
 	@echo "Done. Make sure $(BINDIR) is in your PATH."
 
 uninstall:
-	@echo "Removing ralphs from $(BINDIR)..."
-	@rm -f $(BINDIR)/ralphs
+	@echo "Removing wiggum from $(BINDIR)..."
+	@rm -f $(BINDIR)/wiggum
 	@echo "Done."
 
 test:
-	@bash tests/test_ralphs.sh
+	@bash tests/test_wiggum.sh
 
 check:
-	@shellcheck --severity=warning lib/*.sh tests/*.sh bin/ralphs
+	@shellcheck --severity=warning lib/*.sh tests/*.sh bin/wiggum
 	@echo "All checks passed."

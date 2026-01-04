@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 #
-# ralphs - Multi-Agent Orchestration Harness
+# wiggum - Multi-Agent Orchestration Harness
 # Version: 0.1.0
 #
 # A thin glue between tmux, tickets, hooks, and tools.
@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-RALPHS_VERSION="0.1.0"
+WIGGUM_VERSION="0.1.0"
 
 # Resolve symlinks to find the real script location
 SCRIPT_PATH="${BASH_SOURCE[0]}"
@@ -20,9 +20,9 @@ while [[ -L "$SCRIPT_PATH" ]]; do
     # Handle relative symlinks
     [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
 done
-RALPHS_ROOT="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
-RALPHS_LIB="$RALPHS_ROOT/lib"
-export RALPHS_DEFAULTS="$RALPHS_ROOT/defaults"
+WIGGUM_ROOT="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
+WIGGUM_LIB="$WIGGUM_ROOT/lib"
+export WIGGUM_DEFAULTS="$WIGGUM_ROOT/defaults"
 
 # Exit codes (exported for use in sourced scripts)
 export EXIT_SUCCESS=0
@@ -34,27 +34,27 @@ export EXIT_TICKET_NOT_FOUND=5
 export EXIT_INVALID_TRANSITION=6
 
 # Source library functions
-source "$RALPHS_LIB/config.sh"
-source "$RALPHS_LIB/utils.sh"
-source "$RALPHS_LIB/sync.sh"
-source "$RALPHS_LIB/session.sh"
-source "$RALPHS_LIB/pane.sh"
-source "$RALPHS_LIB/ticket.sh"
-source "$RALPHS_LIB/tools.sh"
-source "$RALPHS_LIB/hooks.sh"
+source "$WIGGUM_LIB/config.sh"
+source "$WIGGUM_LIB/utils.sh"
+source "$WIGGUM_LIB/sync.sh"
+source "$WIGGUM_LIB/session.sh"
+source "$WIGGUM_LIB/pane.sh"
+source "$WIGGUM_LIB/ticket.sh"
+source "$WIGGUM_LIB/tools.sh"
+source "$WIGGUM_LIB/hooks.sh"
 
 # Global flags (set by parse_global_flags, used by utils.sh)
-export RALPHS_QUIET=false
-export RALPHS_VERBOSE=false
+export WIGGUM_QUIET=false
+export WIGGUM_VERBOSE=false
 
 usage() {
     cat <<EOF
-ralphs - Multi-Agent Orchestration Harness v$RALPHS_VERSION
+wiggum - Multi-Agent Orchestration Harness v$WIGGUM_VERSION
 
-Usage: ralphs <command> [options]
+Usage: wiggum <command> [options]
 
 Session Management:
-  init [--session NAME]         Initialize a new ralphs session
+  init [--session NAME]         Initialize a new wiggum session
   attach [--session NAME]       Attach to existing session
   teardown [--force]            Tear down session and cleanup
 
@@ -91,11 +91,11 @@ Global Options:
   --help                        Show help
 
 Examples:
-  ralphs init
-  ralphs ticket create "Add auth" --type feature
-  ralphs spawn supervisor
-  ralphs spawn worker tk-5c46
-  ralphs status
+  wiggum init
+  wiggum ticket create "Add auth" --type feature
+  wiggum spawn supervisor
+  wiggum spawn worker tk-5c46
+  wiggum status
 EOF
 }
 
@@ -103,19 +103,19 @@ parse_global_flags() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --session)
-                export RALPHS_SESSION="$2"
+                export WIGGUM_SESSION="$2"
                 shift 2
                 ;;
             --config)
-                export RALPHS_CONFIG_PATH="$2"
+                export WIGGUM_CONFIG_PATH="$2"
                 shift 2
                 ;;
             --quiet)
-                RALPHS_QUIET=true
+                WIGGUM_QUIET=true
                 shift
                 ;;
             --verbose)
-                RALPHS_VERBOSE=true
+                WIGGUM_VERBOSE=true
                 shift
                 ;;
             --help|-h)
@@ -123,7 +123,7 @@ parse_global_flags() {
                 exit 0
                 ;;
             --version|-v)
-                echo "ralphs v$RALPHS_VERSION"
+                echo "wiggum v$WIGGUM_VERSION"
                 exit 0
                 ;;
             *)

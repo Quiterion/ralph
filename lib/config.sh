@@ -4,20 +4,20 @@
 #
 
 # Default configuration values
-: "${RALPHS_SESSION:=""}"
-: "${RALPHS_MAX_AGENTS:=4}"
-: "${RALPHS_POLL_INTERVAL:=10}"
-: "${RALPHS_AGENT_CMD:=claude}"
-: "${RALPHS_LAYOUT:=tiled}"
-: "${RALPHS_EDITOR:=${EDITOR:-vim}}"
+: "${WIGGUM_SESSION:=""}"
+: "${WIGGUM_MAX_AGENTS:=4}"
+: "${WIGGUM_POLL_INTERVAL:=10}"
+: "${WIGGUM_AGENT_CMD:=claude}"
+: "${WIGGUM_LAYOUT:=tiled}"
+: "${WIGGUM_EDITOR:=${EDITOR:-vim}}"
 
 # Auto-detect editor mode from agent's config if not explicitly set
 detect_editor_mode() {
     # If already set, use that
-    [[ -n "${RALPHS_EDITOR_MODE:-}" ]] && return
+    [[ -n "${WIGGUM_EDITOR_MODE:-}" ]] && return
 
     # Only check Claude config if using claude as the agent
-    if [[ "${RALPHS_AGENT_CMD:-}" == "claude" ]] || [[ "${RALPHS_AGENT_CMD:-}" == *"claude "* ]]; then
+    if [[ "${WIGGUM_AGENT_CMD:-}" == "claude" ]] || [[ "${WIGGUM_AGENT_CMD:-}" == *"claude "* ]]; then
         local claude_config="$HOME/.claude.json"
         if [[ -f "$claude_config" ]]; then
             local mode
@@ -28,27 +28,27 @@ detect_editor_mode() {
                 mode=$(grep -o '"editorMode"[[:space:]]*:[[:space:]]*"[^"]*"' "$claude_config" 2>/dev/null | sed 's/.*"\([^"]*\)"$/\1/')
             fi
             if [[ -n "$mode" ]]; then
-                RALPHS_EDITOR_MODE="$mode"
+                WIGGUM_EDITOR_MODE="$mode"
                 return
             fi
         fi
     fi
 
     # Default to normal
-    RALPHS_EDITOR_MODE="normal"
+    WIGGUM_EDITOR_MODE="normal"
 }
 
-: "${RALPHS_EDITOR_MODE:=}"  # Will be set by detect_editor_mode if empty
+: "${WIGGUM_EDITOR_MODE:=}"  # Will be set by detect_editor_mode if empty
 
 # Load configuration from file
 load_config() {
-    local config_path="${RALPHS_CONFIG_PATH:-}"
+    local config_path="${WIGGUM_CONFIG_PATH:-}"
 
     # If no explicit path, try project config (from main project, not worktree)
     if [[ -z "$config_path" ]]; then
         local main_root
         if main_root=$(get_main_project_root 2>/dev/null); then
-            config_path="$main_root/.ralphs/config.sh"
+            config_path="$main_root/.wiggum/config.sh"
         fi
     fi
 
@@ -60,12 +60,12 @@ load_config() {
     fi
 
     # Set default session name if not set
-    if [[ -z "$RALPHS_SESSION" ]]; then
+    if [[ -z "$WIGGUM_SESSION" ]]; then
         local main_root
         if main_root=$(get_main_project_root 2>/dev/null); then
-            RALPHS_SESSION="ralphs-$(basename "$main_root")"
+            WIGGUM_SESSION="wiggum-$(basename "$main_root")"
         else
-            RALPHS_SESSION="ralphs-$(basename "$(pwd)")"
+            WIGGUM_SESSION="wiggum-$(basename "$(pwd)")"
         fi
     fi
 
@@ -76,7 +76,7 @@ load_config() {
 # Get current session name
 get_session_name() {
     load_config
-    echo "$RALPHS_SESSION"
+    echo "$WIGGUM_SESSION"
 }
 
 # Write default config file
@@ -88,27 +88,27 @@ write_default_config() {
     cat > "$config_path" <<EOF
 #!/bin/bash
 #
-# ralphs configuration
+# wiggum configuration
 #
 # Note: Environment variables take precedence over these defaults
 #
 
 # Session name for tmux
-: "\${RALPHS_SESSION:=ralphs-${dirname}}"
+: "\${WIGGUM_SESSION:=wiggum-${dirname}}"
 
 # Max concurrent agent panes (excludes supervisor)
-: "\${RALPHS_MAX_AGENTS:=4}"
+: "\${WIGGUM_MAX_AGENTS:=4}"
 
 # Poll interval for supervisor (seconds)
-: "\${RALPHS_POLL_INTERVAL:=10}"
+: "\${WIGGUM_POLL_INTERVAL:=10}"
 
 # Inner harness command (claude, amp, aider, etc.)
-: "\${RALPHS_AGENT_CMD:=claude}"
+: "\${WIGGUM_AGENT_CMD:=claude}"
 
 # tmux pane layout
-: "\${RALPHS_LAYOUT:=tiled}"
+: "\${WIGGUM_LAYOUT:=tiled}"
 
 # Editor for ticket editing
-: "\${RALPHS_EDITOR:=\${EDITOR:-vim}}"
+: "\${WIGGUM_EDITOR:=\${EDITOR:-vim}}"
 EOF
 }

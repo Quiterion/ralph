@@ -5,13 +5,13 @@
 # Logs metrics and performs cleanup.
 #
 # Environment:
-#   RALPHS_TICKET_ID    - The ticket ID
-#   RALPHS_TICKET_PATH  - Full path to ticket file
-#   RALPHS_SESSION      - tmux session name
+#   WIGGUM_TICKET_ID    - The ticket ID
+#   WIGGUM_TICKET_PATH  - Full path to ticket file
+#   WIGGUM_SESSION      - tmux session name
 #
 
-TICKET_ID="${1:-$RALPHS_TICKET_ID}"
-TICKET_PATH="${RALPHS_TICKET_PATH:-.ralphs/tickets/${TICKET_ID}.md}"
+TICKET_ID="${1:-$WIGGUM_TICKET_ID}"
+TICKET_PATH="${WIGGUM_TICKET_PATH:-.wiggum/tickets/${TICKET_ID}.md}"
 
 echo "[hook] Ticket $TICKET_ID closed"
 
@@ -24,6 +24,6 @@ if [[ -f "$TICKET_PATH" ]]; then
         echo "[metrics] $TICKET_ID - Created: $CREATED, Closed: $CLOSED"
 
         # Optional: append to metrics log
-        # echo "$TICKET_ID,$CREATED,$CLOSED" >> .ralphs/metrics.csv
+        # echo "$TICKET_ID,$CREATED,$CLOSED" >> .wiggum/metrics.csv
     fi
 fi

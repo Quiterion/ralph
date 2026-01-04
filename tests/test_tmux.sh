@@ -23,12 +23,12 @@ test_spawn_creates_session() {
 
     local session
     session=$(test_session_name)
-    export RALPHS_SESSION="$session"
+    export WIGGUM_SESSION="$session"
 
     # Ensure cleanup on exit
     trap "cleanup_test_session '$session'" RETURN
 
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # Session should NOT exist after init (lazy creation)
     if tmux has-session -t "$session" 2>/dev/null; then
@@ -37,7 +37,7 @@ test_spawn_creates_session() {
     fi
 
     # Spawn supervisor should create session
-    "$RALPHS_BIN" spawn supervisor &>/dev/null
+    "$WIGGUM_BIN" spawn supervisor &>/dev/null
 
     # Verify session exists
     if ! tmux has-session -t "$session" 2>/dev/null; then
@@ -57,20 +57,20 @@ test_spawn_session_idempotent() {
 
     local session
     session=$(test_session_name)
-    export RALPHS_SESSION="$session"
+    export WIGGUM_SESSION="$session"
     trap "cleanup_test_session '$session'" RETURN
 
-    "$RALPHS_BIN" init
-    "$RALPHS_BIN" spawn supervisor &>/dev/null
+    "$WIGGUM_BIN" init
+    "$WIGGUM_BIN" spawn supervisor &>/dev/null
 
     # Create a ticket for second spawn
-    "$RALPHS_BIN" ticket create "Test ticket" &>/dev/null
+    "$WIGGUM_BIN" ticket create "Test ticket" &>/dev/null
     local ticket_id
-    ticket_id=$("$RALPHS_BIN" ticket ready | head -1)
+    ticket_id=$("$WIGGUM_BIN" ticket ready | head -1)
 
     # Second spawn should not fail
     if [[ -n "$ticket_id" ]]; then
-        "$RALPHS_BIN" spawn worker "$ticket_id" &>/dev/null
+        "$WIGGUM_BIN" spawn worker "$ticket_id" &>/dev/null
     fi
 
     if ! tmux has-session -t "$session" 2>/dev/null; then
@@ -89,11 +89,11 @@ test_teardown_kills_session() {
 
     local session
     session=$(test_session_name)
-    export RALPHS_SESSION="$session"
+    export WIGGUM_SESSION="$session"
     trap "cleanup_test_session '$session'" RETURN
 
-    "$RALPHS_BIN" init
-    "$RALPHS_BIN" spawn supervisor &>/dev/null
+    "$WIGGUM_BIN" init
+    "$WIGGUM_BIN" spawn supervisor &>/dev/null
 
     # Verify it exists
     if ! tmux has-session -t "$session" 2>/dev/null; then
@@ -101,7 +101,7 @@ test_teardown_kills_session() {
         return 1
     fi
 
-    "$RALPHS_BIN" teardown --force
+    "$WIGGUM_BIN" teardown --force
 
     # Verify it's gone
     if tmux has-session -t "$session" 2>/dev/null; then
@@ -118,13 +118,13 @@ test_list_panes_empty() {
 
     local session
     session=$(test_session_name)
-    export RALPHS_SESSION="$session"
+    export WIGGUM_SESSION="$session"
     trap "cleanup_test_session '$session'" RETURN
 
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     local output
-    output=$("$RALPHS_BIN" list)
+    output=$("$WIGGUM_BIN" list)
 
     # Should show table headers at minimum (even without session)
     assert_contains "$output" "PANE" "Should show pane column header"
@@ -140,14 +140,14 @@ test_list_panes_json_format() {
 
     local session
     session=$(test_session_name)
-    export RALPHS_SESSION="$session"
+    export WIGGUM_SESSION="$session"
     trap "cleanup_test_session '$session'" RETURN
 
-    "$RALPHS_BIN" init
-    "$RALPHS_BIN" spawn supervisor &>/dev/null
+    "$WIGGUM_BIN" init
+    "$WIGGUM_BIN" spawn supervisor &>/dev/null
 
     local output
-    output=$("$RALPHS_BIN" list --format json)
+    output=$("$WIGGUM_BIN" list --format json)
 
     # Should be valid JSON array
     if [[ "$output" != "[]" && "$output" != *"["* ]]; then
@@ -166,14 +166,14 @@ test_status_shows_overview() {
 
     local session
     session=$(test_session_name)
-    export RALPHS_SESSION="$session"
+    export WIGGUM_SESSION="$session"
     trap "cleanup_test_session '$session'" RETURN
 
-    "$RALPHS_BIN" init
-    "$RALPHS_BIN" ticket create "Status test ticket"
+    "$WIGGUM_BIN" init
+    "$WIGGUM_BIN" ticket create "Status test ticket"
 
     local output
-    output=$("$RALPHS_BIN" status)
+    output=$("$WIGGUM_BIN" status)
 
     # Should show session and ticket info
     assert_contains "$output" "SESSION:" "Should show session info"
@@ -188,10 +188,10 @@ test_attach_fails_no_session() {
         return 0
     fi
 
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # Try to attach to non-existent session
-    if "$RALPHS_BIN" attach 2>/dev/null; then
+    if "$WIGGUM_BIN" attach 2>/dev/null; then
         echo "Attach should fail for non-existent session"
         return 1
     fi
@@ -203,10 +203,10 @@ test_teardown_fails_no_session() {
         return 0
     fi
 
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
 
     # Try to teardown non-existent session
-    if "$RALPHS_BIN" teardown 2>/dev/null; then
+    if "$WIGGUM_BIN" teardown 2>/dev/null; then
         echo "Teardown should fail for non-existent session"
         return 1
     fi

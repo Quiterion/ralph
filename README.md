@@ -1,13 +1,13 @@
-# ralphs: Multi-Agent Orchestration Harness
+# wiggum: Multi-Agent Orchestration Harness
 
 **Version:** 0.1.0-draft
 **Lineage:** Evolved from [Classic Ralph](../ralph_classic.md)
 
 ---
 
-## What is ralphs?
+## What is wiggum?
 
-`ralphs` is a minimalist outer harness for orchestrating multiple coding agents. A single ralph is unreliable, but a *school* of ralphs—properly orchestrated—ships production code.
+`wiggum` is a minimalist outer harness for orchestrating multiple coding agents. A single Ralph is unreliable, but a *family of Ralphs* —properly orchestrated—ships production code.
 
 The harness is **thin glue** between:
 - **tmux** — process lifecycle and observability
@@ -15,7 +15,7 @@ The harness is **thin glue** between:
 - **hooks** — pipeline stages triggered by state transitions
 - **tools** — summarization so supervisors stay context-light
 
-No daemons. No databases. Just shell scripts, markdown files, and Unix philosophy.
+All offered via a simple, agent-friendly CLI tool.
 
 ---
 
@@ -33,13 +33,13 @@ No daemons. No databases. Just shell scripts, markdown files, and Unix philosoph
 
 5. **Eventual consistency** — Agents fail. Design for retry, rollback, recovery.
 
-### New in ralphs
+### New in wiggum
 
 6. **Externalized orchestration** — Subagent spawning moves from inside the agent to the harness. Observable, controllable, survivable.
 
 7. **Scope-relative tasks** — "One task" is fractal. Supervisor's task = epic. Worker's task = component. Inner subagents = functions.
 
-8. **Summarization over raw data** — Supervisors invoke tools that return *insights*, not 10k tokens of trajectory logs. (See: [tools.md](./tools.md) for the WebFetch analogy)
+8. **Summarization over raw data** — Supervisors invoke tools that return *insights*, not 10k tokens of trajectory logs. (See: [tools.md](./specs/tools.md))
 
 9. **Pipeline as hooks** — Backpressure stages (in-progress → review → QA) encoded as hooks triggered by ticket state transitions.
 
@@ -50,20 +50,20 @@ No daemons. No databases. Just shell scripts, markdown files, and Unix philosoph
 ## Quick Start
 
 ```bash
-# Initialize ralphs in your project
-ralphs init
+# Initialize wiggum in your project
+wiggum init
 
 # Create a ticket
-ralphs ticket create "Implement auth middleware" --type feature
+wiggum ticket create "Implement auth middleware" --type feature
 
 # Start the supervisor
-ralphs spawn supervisor
+wiggum spawn supervisor
 
 # Watch the school work
-ralphs status
+wiggum status
 
 # Attach to observe
-ralphs attach
+wiggum attach
 ```
 
 ---
@@ -72,22 +72,22 @@ ralphs attach
 
 | Document | Description |
 |----------|-------------|
-| [architecture.md](./architecture.md) | System diagram, component responsibilities |
-| [tickets.md](./tickets.md) | Ticket schema, states, lifecycle |
-| [hooks.md](./hooks.md) | Hook system, interface, examples |
-| [tools.md](./tools.md) | Summarization tools, WebFetch analogy |
-| [cli.md](./cli.md) | Command reference |
-| [prompts.md](./prompts.md) | Agent role templates |
+| [architecture.md](./specs/architecture.md) | System diagram, component responsibilities |
+| [tickets.md](./specs/tickets.md) | Ticket schema, states, lifecycle |
+| [hooks.md](./specs/hooks.md) | Hook system, interface, examples |
+| [tools.md](./specs/tools.md) | Summarization tools |
+| [cli.md](./specs/cli.md) | Command reference |
+| [prompts.md](./specs/prompts.md) | Agent role templates |
 
 ---
 
 ## Comparison with Classic Ralph
 
-| Aspect | Classic Ralph | ralphs |
+| Aspect | Classic Ralph | wiggum |
 |--------|---------------|--------|
 | Loop | Single bash while loop | Supervisor + worker panes |
 | Subagents | Internal (black box) | External (tmux panes) for long work |
 | State | fix_plan.md | Integrated ticket system |
 | Backpressure | Single agent runs tests | Pipeline stages via hooks |
-| Observability | Watch the stream | `ralphs status`, `ralphs fetch` |
+| Observability | Watch the stream | `wiggum status`, `wiggum fetch` |
 | Recovery | git reset --hard | Per-ticket retry, rollback |

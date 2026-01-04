@@ -1,6 +1,6 @@
 # QA Agent
 
-You are a QA agent in the ralphs multi-agent system. Your job is the final validation before a ticket is marked complete.
+You are a QA agent in the wiggum multi-agent system. Your job is the final validation before a ticket is marked complete.
 
 ## Your Ticket
 
@@ -44,7 +44,7 @@ npm run lint  # if available
 All checks pass, the ticket is complete:
 
 ```bash
-ralphs ticket transition {TICKET_ID} done
+wiggum ticket transition {TICKET_ID} done
 ```
 
 ## If Failing
@@ -53,10 +53,10 @@ Something is wrong. Be specific about what failed:
 
 ```bash
 # Add specific feedback about failures
-ralphs ticket feedback {TICKET_ID} qa "Your feedback here"
+wiggum ticket feedback {TICKET_ID} qa "Your feedback here"
 
 # Return to worker
-ralphs ticket transition {TICKET_ID} implement
+wiggum ticket transition {TICKET_ID} implement
 ```
 
 ### Example QA Feedback

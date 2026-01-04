@@ -3,11 +3,11 @@
 # sync.sh - Distributed ticket synchronization
 #
 # Provides git-based synchronization for tickets across worktrees.
-# See specs/ralphs/distributed-tickets.md for architecture details.
+# See specs/wiggum/distributed-tickets.md for architecture details.
 #
 
 # Configuration
-: "${RALPHS_AUTO_SYNC:=true}"
+: "${WIGGUM_AUTO_SYNC:=true}"
 
 # Check if current tickets dir is the bare repo (origin)
 # This is used to skip sync operations when we're somehow in the bare repo context
@@ -21,7 +21,7 @@ get_bare_repo() {
     if is_ticket_origin; then
         echo "$TICKETS_DIR"
     else
-        echo "$RALPHS_DIR/tickets.git"
+        echo "$WIGGUM_DIR/tickets.git"
     fi
 }
 
@@ -51,8 +51,8 @@ bare_write_ticket() {
     local tmp
     tmp=$(mktemp -d)
     git clone "$bare_repo" "$tmp" --quiet 2>/dev/null
-    git -C "$tmp" config user.email "ralphs@local"
-    git -C "$tmp" config user.name "ralphs"
+    git -C "$tmp" config user.email "wiggum@local"
+    git -C "$tmp" config user.name "wiggum"
 
     echo "$content" > "$tmp/$ticket_file"
     git -C "$tmp" add "$ticket_file"
@@ -71,8 +71,8 @@ bare_delete_ticket() {
     local tmp
     tmp=$(mktemp -d)
     git clone "$bare_repo" "$tmp" --quiet 2>/dev/null
-    git -C "$tmp" config user.email "ralphs@local"
-    git -C "$tmp" config user.name "ralphs"
+    git -C "$tmp" config user.email "wiggum@local"
+    git -C "$tmp" config user.name "wiggum"
 
     rm -f "$tmp/$ticket_file"
     git -C "$tmp" add -A
@@ -83,7 +83,7 @@ bare_delete_ticket() {
 
 # Initialize the bare tickets repository
 init_bare_tickets_repo() {
-    local tickets_git="$RALPHS_DIR/tickets.git"
+    local tickets_git="$WIGGUM_DIR/tickets.git"
 
     if [[ -d "$tickets_git" ]]; then
         debug "Bare tickets repo already exists"
@@ -103,8 +103,8 @@ init_bare_tickets_repo() {
     local tmp
     tmp=$(mktemp -d)
     git clone "$tickets_git" "$tmp" --quiet 2>/dev/null || true
-    git -C "$tmp" config user.email "ralphs@local"
-    git -C "$tmp" config user.name "ralphs"
+    git -C "$tmp" config user.email "wiggum@local"
+    git -C "$tmp" config user.name "wiggum"
     # Create initial branch explicitly
     git -C "$tmp" checkout -b main 2>/dev/null || true
     touch "$tmp/.gitkeep"
@@ -193,17 +193,17 @@ exit 0
 HOOK
     chmod +x "$hooks_dir/pre-receive"
 
-    # Post-receive hook for triggering ralphs hooks
+    # Post-receive hook for triggering wiggum hooks
     cat > "$hooks_dir/post-receive" <<'HOOK'
 #!/bin/bash
 
-# Find project root (hooks -> tickets.git -> .ralphs -> proj)
+# Find project root (hooks -> tickets.git -> .wiggum -> proj)
 TICKETS_GIT="$(cd "$(dirname "$0")/.." && pwd)"
-RALPHS_DIR="$(dirname "$TICKETS_GIT")"
-PROJECT_ROOT="$(dirname "$RALPHS_DIR")"
+WIGGUM_DIR="$(dirname "$TICKETS_GIT")"
+PROJECT_ROOT="$(dirname "$WIGGUM_DIR")"
 
-# Find ralphs binary
-RALPHS_BIN=$(command -v ralphs 2>/dev/null || echo "$PROJECT_ROOT/bin/ralphs")
+# Find wiggum binary
+WIGGUM_BIN=$(command -v wiggum 2>/dev/null || echo "$PROJECT_ROOT/bin/wiggum")
 
 while read -r oldrev newrev refname; do
     # Skip deletions
@@ -220,24 +220,24 @@ while read -r oldrev newrev refname; do
 
         [[ "$old_state" == "$new_state" ]] && continue
 
-        # Trigger appropriate hook via ralphs (background to avoid blocking)
+        # Trigger appropriate hook via wiggum (background to avoid blocking)
         case "$new_state" in
             review)
-                (cd "$PROJECT_ROOT" && "$RALPHS_BIN" hook run on-in-progress-done "$ticket_id" 2>/dev/null &)
+                (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-draft-done "$ticket_id" 2>/dev/null &)
                 ;;
             qa)
-                (cd "$PROJECT_ROOT" && "$RALPHS_BIN" hook run on-review-done "$ticket_id" 2>/dev/null &)
+                (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-review-done "$ticket_id" 2>/dev/null &)
                 ;;
             in-progress)
                 if [[ "$old_state" == "review" ]]; then
-                    (cd "$PROJECT_ROOT" && "$RALPHS_BIN" hook run on-review-rejected "$ticket_id" 2>/dev/null &)
+                    (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-review-rejected "$ticket_id" 2>/dev/null &)
                 elif [[ "$old_state" == "qa" ]]; then
-                    (cd "$PROJECT_ROOT" && "$RALPHS_BIN" hook run on-qa-rejected "$ticket_id" 2>/dev/null &)
+                    (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-qa-rejected "$ticket_id" 2>/dev/null &)
                 fi
                 ;;
             done)
-                (cd "$PROJECT_ROOT" && "$RALPHS_BIN" hook run on-qa-done "$ticket_id" 2>/dev/null &)
-                (cd "$PROJECT_ROOT" && "$RALPHS_BIN" hook run on-close "$ticket_id" 2>/dev/null &)
+                (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-qa-done "$ticket_id" 2>/dev/null &)
+                (cd "$PROJECT_ROOT" && "$WIGGUM_BIN" hook run on-close "$ticket_id" 2>/dev/null &)
                 ;;
         esac
     done
@@ -246,17 +246,17 @@ HOOK
     chmod +x "$hooks_dir/post-receive"
 }
 
-# Clone tickets repo into a worktree's .ralphs directory
+# Clone tickets repo into a worktree's .wiggum directory
 clone_tickets_to_worktree() {
-    local worktree_ralphs="$1"
-    local bare_repo="$RALPHS_DIR/tickets.git"
+    local worktree_wiggum="$1"
+    local bare_repo="$WIGGUM_DIR/tickets.git"
 
     if [[ ! -d "$bare_repo" ]]; then
         warn "Bare tickets repo not found, skipping clone"
         return 1
     fi
 
-    local tickets_clone="$worktree_ralphs/tickets"
+    local tickets_clone="$worktree_wiggum/tickets"
 
     if [[ -d "$tickets_clone/.git" ]]; then
         debug "Tickets already cloned to worktree"
@@ -270,8 +270,8 @@ clone_tickets_to_worktree() {
     git clone "$bare_repo" "$tickets_clone" --quiet
 
     # Configure user for commits
-    git -C "$tickets_clone" config user.email "ralphs@local"
-    git -C "$tickets_clone" config user.name "ralphs"
+    git -C "$tickets_clone" config user.email "wiggum@local"
+    git -C "$tickets_clone" config user.name "wiggum"
 
     success "Cloned tickets repo to worktree"
 }
@@ -279,7 +279,7 @@ clone_tickets_to_worktree() {
 # Pull latest tickets from origin
 ticket_sync_pull() {
     is_ticket_origin && return 0
-    [[ "$RALPHS_AUTO_SYNC" == "false" ]] && return 0
+    [[ "$WIGGUM_AUTO_SYNC" == "false" ]] && return 0
 
     require_project
 
@@ -297,7 +297,7 @@ ticket_sync_pull() {
 # Push ticket changes to origin
 ticket_sync_push() {
     is_ticket_origin && return 0
-    [[ "$RALPHS_AUTO_SYNC" == "false" ]] && return 0
+    [[ "$WIGGUM_AUTO_SYNC" == "false" ]] && return 0
 
     require_project
 
@@ -324,7 +324,7 @@ ticket_sync() {
 
     # Check if we have a clone (needed for sync)
     if [[ ! -d "$TICKETS_DIR/.git" ]]; then
-        warn "No tickets clone found - run 'ralphs init' first"
+        warn "No tickets clone found - run 'wiggum init' first"
         return 1
     fi
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# framework.sh - Test framework for ralphs
+# framework.sh - Test framework for wiggum
 #
 # Provides setup, teardown, assertions, and test running infrastructure.
 #
@@ -24,10 +24,10 @@ export TESTS_FAILED="${TESTS_FAILED:-0}"
 # Test directory (cleaned up on exit)
 TEST_DIR=""
 
-# Ralphs binary (resolved at script load time, before any cd)
+# Wiggum binary (resolved at script load time, before any cd)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RALPHS_BIN="$SCRIPT_DIR/../bin/ralphs"
-export RALPHS_BIN
+WIGGUM_BIN="$SCRIPT_DIR/../bin/wiggum"
+export WIGGUM_BIN
 
 #
 # Setup and teardown
@@ -37,12 +37,12 @@ setup() {
     TEST_DIR=$(mktemp -d)
     cd "$TEST_DIR"
 
-    if [[ ! -x "$RALPHS_BIN" ]]; then
-        echo -e "${RED}Error: ralphs binary not found at $RALPHS_BIN${NC}"
+    if [[ ! -x "$WIGGUM_BIN" ]]; then
+        echo -e "${RED}Error: wiggum binary not found at $WIGGUM_BIN${NC}"
         exit 1
     fi
 
-    # Initialize git repo (required for ralphs)
+    # Initialize git repo (required for wiggum)
     git init --quiet
     git config user.email "test@test.com"
     git config user.name "Test User"
@@ -176,7 +176,7 @@ tmux_available() {
 }
 
 test_session_name() {
-    echo "ralphs-test-$$-$RANDOM"
+    echo "wiggum-test-$$-$RANDOM"
 }
 
 cleanup_test_session() {

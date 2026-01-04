@@ -1,21 +1,21 @@
 # Tickets
 
-ralphs includes an integrated ticket system based on [wedow/ticket](https://github.com/wedow/ticket). Tickets are git-backed markdown files with YAML frontmatter.
+wiggum includes an integrated ticket system based on [wedow/ticket](https://github.com/wedow/ticket). Tickets are git-backed markdown files with YAML frontmatter.
 
-Tickets are stored in a bare git repository (`.ralphs/tickets.git`) and cloned to each worktree for multi-agent synchronization. See [Sync & Distribution](#sync--distribution) below.
+Tickets are stored in a bare git repository (`.wiggum/tickets.git`) and cloned to each worktree for multi-agent synchronization. See [Sync & Distribution](#sync--distribution) below.
 
 ---
 
 ## Why Integrated?
 
-Rather than bolting ticket management onto ralphs, we subsume it:
+Rather than bolting ticket management onto wiggum, we subsume it:
 
-- **Single mental model** — `.ralphs/` is the whole system
+- **Single mental model** — `.wiggum/` is the whole system
 - **Unified state machine** — One `state` field, not `status` vs `stage`
 - **First-class hooks** — State transitions naturally trigger hooks
 - **Cleaner implementation** — No impedance mismatch
 
-The underlying `tk` CLI is vendored and available, but users interact via `ralphs ticket` commands.
+The underlying `tk` CLI is vendored and available, but users interact via `wiggum ticket` commands.
 
 ---
 
@@ -50,7 +50,7 @@ The underlying `tk` CLI is vendored and available, but users interact via `ralph
 | From | To | Trigger | Hook |
 |------|----|---------|------|
 | `ready` | `in-progress` | Worker assigned to ticket | `on-claim` |
-| `in-progress` | `review` | Worker marks done | `on-in-progress-done` |
+| `in-progress` | `review` | Worker marks done | `on-draft-done` |
 | `review` | `qa` | Reviewer approves | `on-review-done` |
 | `review` | `in-progress` | Reviewer rejects | `on-review-rejected` |
 | `qa` | `done` | QA passes | `on-qa-done` → `on-close` |
@@ -127,9 +127,9 @@ A ticket is `ready` only when all `depends_on` tickets are `done`.
 Query blocked/ready tickets:
 
 ```bash
-ralphs ticket ready      # Show tickets available to claim
-ralphs ticket blocked    # Show tickets waiting on dependencies
-ralphs ticket tree tk-5c46   # Show dependency tree
+wiggum ticket ready      # Show tickets available to claim
+wiggum ticket blocked    # Show tickets waiting on dependencies
+wiggum ticket tree tk-5c46   # Show dependency tree
 ```
 
 ---
@@ -160,34 +160,34 @@ The worker's next loop reads the ticket, sees feedback, addresses it.
 
 ## Ticket CLI
 
-All ticket operations go through `ralphs ticket`:
+All ticket operations go through `wiggum ticket`:
 
 ```bash
 # Create
-ralphs ticket create "Title" [--type TYPE] [--priority N] [--dep ID]
+wiggum ticket create "Title" [--type TYPE] [--priority N] [--dep ID]
 
 # Query
-ralphs ticket list              # All tickets
-ralphs ticket ready             # Ready to claim
-ralphs ticket blocked           # Blocked by dependencies
-ralphs ticket show <id>         # Full ticket details
-ralphs ticket tree <id>         # Dependency tree
+wiggum ticket list              # All tickets
+wiggum ticket ready             # Ready to claim
+wiggum ticket blocked           # Blocked by dependencies
+wiggum ticket show <id>         # Full ticket details
+wiggum ticket tree <id>         # Dependency tree
 
 # State transitions
-ralphs ticket claim <id>        # Mark in-progress (usually by worker)
-ralphs ticket transition <id> <state>   # Explicit state change
+wiggum ticket claim <id>        # Mark in-progress (usually by worker)
+wiggum ticket transition <id> <state>   # Explicit state change
 
 # Edit
-ralphs ticket edit <id>         # Open in $EDITOR
-ralphs ticket feedback <id> <source> <message>   # Append feedback
+wiggum ticket edit <id>         # Open in $EDITOR
+wiggum ticket feedback <id> <source> <message>   # Append feedback
 
 # Sync (for distributed mode)
-ralphs ticket sync              # Pull + push
-ralphs ticket sync --pull       # Pull only
-ralphs ticket sync --push       # Push only
+wiggum ticket sync              # Pull + push
+wiggum ticket sync --pull       # Pull only
+wiggum ticket sync --push       # Push only
 
 # Partial ID matching
-ralphs ticket show 5c4          # Matches tk-5c46
+wiggum ticket show 5c4          # Matches tk-5c46
 ```
 
 ---
@@ -210,14 +210,14 @@ Tickets are stored in a separate git repository for multi-agent synchronization.
 ### Architecture
 
 ```
-.ralphs/
+.wiggum/
 ├── tickets.git/          ← bare repo (origin)
 │   └── hooks/            ← pre-receive, post-receive
 └── tickets/              ← clone (for CLI access)
 
 worktrees/
-├── worker-0/.ralphs/tickets/    ← clone
-└── reviewer-0/.ralphs/tickets/  ← clone
+├── worker-0/.wiggum/tickets/    ← clone
+└── reviewer-0/.wiggum/tickets/  ← clone
 ```
 
 All agents (including supervisor) have their own clone. They push/pull to the bare repo.
@@ -238,21 +238,21 @@ Ticket commands auto-sync by default:
 - **Read ops** (`show`, `list`, `ready`) — pull first
 - **Write ops** (`create`, `transition`, `feedback`) — pull, act, push
 
-Disable with `RALPHS_AUTO_SYNC=false` or `--no-sync` flag.
+Disable with `WIGGUM_AUTO_SYNC=false` or `--no-sync` flag.
 
 ### Manual Sync
 
 ```bash
-ralphs ticket sync              # Pull + push
-ralphs ticket sync --pull       # Pull only
-ralphs ticket sync --push       # Push only
+wiggum ticket sync              # Pull + push
+wiggum ticket sync --pull       # Pull only
+wiggum ticket sync --push       # Push only
 ```
 
 ### Conflict Resolution
 
 Most conflicts auto-resolve via rebase (agents edit different tickets). If rebase fails:
 1. Worker sees warning: "Ticket sync conflict"
-2. Resolve manually: `git -C .ralphs/tickets rebase --continue`
+2. Resolve manually: `git -C .wiggum/tickets rebase --continue`
 
 The bare repo uses `*.md merge=union` to append conflicting additions.
 

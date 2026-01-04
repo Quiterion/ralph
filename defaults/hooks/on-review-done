@@ -5,17 +5,17 @@
 # Spawns a QA agent for the ticket.
 #
 # Environment:
-#   RALPHS_TICKET_ID    - The ticket ID
-#   RALPHS_TICKET_PATH  - Full path to ticket file
-#   RALPHS_PREV_STATE   - Previous state (review)
-#   RALPHS_NEW_STATE    - New state (qa)
-#   RALPHS_PANE         - Pane that triggered transition
-#   RALPHS_SESSION      - tmux session name
+#   WIGGUM_TICKET_ID    - The ticket ID
+#   WIGGUM_TICKET_PATH  - Full path to ticket file
+#   WIGGUM_PREV_STATE   - Previous state (review)
+#   WIGGUM_NEW_STATE    - New state (qa)
+#   WIGGUM_PANE         - Pane that triggered transition
+#   WIGGUM_SESSION      - tmux session name
 #
 
-TICKET_ID="${1:-$RALPHS_TICKET_ID}"
+TICKET_ID="${1:-$WIGGUM_TICKET_ID}"
 
 echo "[hook] Review passed for $TICKET_ID, spawning QA"
 
 # Spawn a QA agent
-ralphs spawn qa "$TICKET_ID"
+wiggum spawn qa "$TICKET_ID"

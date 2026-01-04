@@ -16,20 +16,20 @@
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   .ralphs/tickets/                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │
-│  │ tk-5c46  │  │ tk-8a2b  │  │ tk-9f3c  │  │ tk-epic  │        │
-│  │ state:   │  │ state:   │  │ state:   │  │ children:│        │
-│  │ review   │  │in-progress│  │ ready    │  │ (future) │        │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘        │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                   .wiggum/tickets/                          │
+│  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌──────────┐    │
+│  │ tk-5c46  │  │ tk-8a2b   │  │ tk-9f3c  │  │ tk-epic  │    │
+│  │ state:   │  │ state:    │  │ state:   │  │ children:│    │
+│  │ review   │  │in-progress│  │ ready    │  │ tk-2e... │    │
+│  └──────────┘  └───────────┘  └──────────┘  └──────────┘    │
+└─────────────────────────────────────────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      .ralphs/hooks/                             │
-│  on-claim │ on-in-progress-done │ on-review-done │ on-close       │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                      .wiggum/hooks/                                 │
+│  on-claim │ on-draft-done │ on-review-done │ on-qa-done │ on-close  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -50,7 +50,7 @@
 
 ```
 project/                               # main project (human's workspace)
-├── .ralphs/
+├── .wiggum/
 │   ├── config.sh                      # harness configuration
 │   ├── tickets.git/                   # bare repo (ticket origin)
 │   │   └── hooks/                     # pre-receive, post-receive
@@ -59,7 +59,7 @@ project/                               # main project (human's workspace)
 │   │   └── tk-8a2b.md
 │   ├── hooks/                         # state transition hooks
 │   │   ├── on-claim
-│   │   ├── on-in-progress-done
+│   │   ├── on-draft-done
 │   │   ├── on-review-done
 │   │   ├── on-review-rejected
 │   │   ├── on-qa-done
@@ -71,9 +71,9 @@ project/                               # main project (human's workspace)
 │       └── qa.md
 ├── worktrees/                         # agent worktrees
 │   ├── supervisor-0/                  # supervisor's worktree
-│   │   └── .ralphs/tickets/           # clone
+│   │   └── .wiggum/tickets/           # clone
 │   └── worker-0/
-│       └── .ralphs/tickets/           # clone
+│       └── .wiggum/tickets/           # clone
 ├── specs/                             # project specifications
 └── AGENT.md                           # inner harness instructions
 ```
@@ -88,7 +88,7 @@ The supervisor is a **high-level scheduler**, not a processor.
 
 ### Does
 
-- Query ticket state (`ralphs ticket ready`, `ralphs ticket blocked`)
+- Query ticket state (`wiggum ticket ready`, `wiggum ticket blocked`)
 - Spawn workers into panes
 - Invoke tools to get summarized progress
 - Make decisions: retry, escalate, continue, intervene
@@ -104,19 +104,19 @@ The supervisor is a **high-level scheduler**, not a processor.
 ```bash
 while :; do
   # Check worker status via summarization tools
-  for pane in $(ralphs list); do
-    summary=$(ralphs fetch $pane "any blockers?")
+  for pane in $(wiggum list); do
+    summary=$(wiggum fetch $pane "any blockers?")
     # Decide based on summary, not raw output
   done
 
   # Spawn new workers for ready tickets
-  for ticket in $(ralphs ticket ready --limit 3); do
-    if ralphs has-capacity; then
-      ralphs spawn worker $ticket
+  for ticket in $(wiggum ticket ready --limit 3); do
+    if wiggum has-capacity; then
+      wiggum spawn worker $ticket
     fi
   done
 
-  sleep $RALPHS_POLL_INTERVAL
+  sleep $WIGGUM_POLL_INTERVAL
 done
 ```
 
@@ -153,21 +153,21 @@ The [tools](./tools.md) invoke ephemeral agents internally—like how `WebFetch`
 
 ## Configuration
 
-`.ralphs/config.sh`:
+`.wiggum/config.sh`:
 
 ```bash
 # Session name
-RALPHS_SESSION="ralphs-myproject"
+WIGGUM_SESSION="wiggum-myproject"
 
 # Max concurrent agent panes (excludes supervisor)
-RALPHS_MAX_AGENTS=4
+WIGGUM_MAX_AGENTS=4
 
 # Poll interval for supervisor (seconds)
-RALPHS_POLL_INTERVAL=10
+WIGGUM_POLL_INTERVAL=10
 
 # Inner harness command
-RALPHS_AGENT_CMD="claude"  # or "amp", "aider", etc.
+WIGGUM_AGENT_CMD="claude"  # or "amp", "aider", etc.
 
 # Pane layout
-RALPHS_LAYOUT="tiled"  # or "even-horizontal", "even-vertical"
+WIGGUM_LAYOUT="tiled"  # or "even-horizontal", "even-vertical"
 ```

@@ -14,77 +14,77 @@ source "$SCRIPT_DIR/framework.sh"
 # Tests
 #
 
-test_init_creates_ralphs_dir() {
-    "$RALPHS_BIN" init
-    assert_dir_exists ".ralphs" "Init should create .ralphs directory"
+test_init_creates_wiggum_dir() {
+    "$WIGGUM_BIN" init
+    assert_dir_exists ".wiggum" "Init should create .wiggum directory"
 }
 
 test_init_creates_config() {
-    "$RALPHS_BIN" init
-    assert_file_exists ".ralphs/config.sh" "Init should create config.sh"
+    "$WIGGUM_BIN" init
+    assert_file_exists ".wiggum/config.sh" "Init should create config.sh"
 }
 
 test_init_creates_tickets_dir() {
-    "$RALPHS_BIN" init
-    assert_dir_exists ".ralphs/tickets" "Init should create tickets directory"
+    "$WIGGUM_BIN" init
+    assert_dir_exists ".wiggum/tickets" "Init should create tickets directory"
 }
 
 test_init_creates_hooks_dir() {
-    "$RALPHS_BIN" init
-    assert_dir_exists ".ralphs/hooks" "Init should create hooks directory"
+    "$WIGGUM_BIN" init
+    assert_dir_exists ".wiggum/hooks" "Init should create hooks directory"
 }
 
 test_init_creates_prompts_dir() {
-    "$RALPHS_BIN" init
-    assert_dir_exists ".ralphs/prompts" "Init should create prompts directory"
+    "$WIGGUM_BIN" init
+    assert_dir_exists ".wiggum/prompts" "Init should create prompts directory"
 }
 
 test_init_copies_default_hooks() {
-    "$RALPHS_BIN" init
-    assert_file_exists ".ralphs/hooks/on-claim" "Init should copy on-claim hook"
-    assert_file_exists ".ralphs/hooks/on-in-progress-done" "Init should copy on-in-progress-done hook"
+    "$WIGGUM_BIN" init
+    assert_file_exists ".wiggum/hooks/on-claim" "Init should copy on-claim hook"
+    assert_file_exists ".wiggum/hooks/on-draft-done" "Init should copy on-draft-done hook"
 }
 
 test_init_copies_default_prompts() {
-    "$RALPHS_BIN" init
-    assert_file_exists ".ralphs/prompts/supervisor.md" "Init should copy supervisor prompt"
-    assert_file_exists ".ralphs/prompts/worker.md" "Init should copy worker prompt"
+    "$WIGGUM_BIN" init
+    assert_file_exists ".wiggum/prompts/supervisor.md" "Init should copy supervisor prompt"
+    assert_file_exists ".wiggum/prompts/worker.md" "Init should copy worker prompt"
 }
 
 test_init_idempotent() {
-    "$RALPHS_BIN" init
-    "$RALPHS_BIN" init  # Should not fail
-    assert_dir_exists ".ralphs"
+    "$WIGGUM_BIN" init
+    "$WIGGUM_BIN" init  # Should not fail
+    assert_dir_exists ".wiggum"
 }
 
 test_init_from_subdirectory() {
-    # Init from subdirectory should create .ralphs at git root
+    # Init from subdirectory should create .wiggum at git root
     mkdir -p src/deep/nested
     cd src/deep/nested || exit 1
-    "$RALPHS_BIN" init
-    # .ralphs should be at git root, not in subdirectory
-    assert_dir_exists "../../../.ralphs" "Init from subdir should create .ralphs at git root"
-    assert_not_exists ".ralphs" "Init from subdir should NOT create .ralphs in subdir"
+    "$WIGGUM_BIN" init
+    # .wiggum should be at git root, not in subdirectory
+    assert_dir_exists "../../../.wiggum" "Init from subdir should create .wiggum at git root"
+    assert_not_exists ".wiggum" "Init from subdir should NOT create .wiggum in subdir"
 }
 
 test_init_from_tickets_clone() {
-    # Init from inside .ralphs/tickets should use existing project
-    "$RALPHS_BIN" init
-    cd .ralphs/tickets || exit 1
-    "$RALPHS_BIN" init
-    # Should not create nested .ralphs
-    assert_not_exists ".ralphs" "Init from tickets clone should NOT create nested .ralphs"
+    # Init from inside .wiggum/tickets should use existing project
+    "$WIGGUM_BIN" init
+    cd .wiggum/tickets || exit 1
+    "$WIGGUM_BIN" init
+    # Should not create nested .wiggum
+    assert_not_exists ".wiggum" "Init from tickets clone should NOT create nested .wiggum"
 }
 
 test_commands_from_subdirectory() {
     # Commands should work from subdirectories
-    "$RALPHS_BIN" init
+    "$WIGGUM_BIN" init
     mkdir -p src/deep
     cd src/deep || exit 1
     local id
-    id=$("$RALPHS_BIN" ticket create "From subdir")
+    id=$("$WIGGUM_BIN" ticket create "From subdir")
     # Ticket should be created at project root
-    assert_file_exists "../../.ralphs/tickets/${id}.md" "Ticket should be created at project root"
+    assert_file_exists "../../.wiggum/tickets/${id}.md" "Ticket should be created at project root"
 }
 
 #
@@ -92,7 +92,7 @@ test_commands_from_subdirectory() {
 #
 
 INIT_TESTS=(
-    "Init creates .ralphs:test_init_creates_ralphs_dir"
+    "Init creates .wiggum:test_init_creates_wiggum_dir"
     "Init creates config:test_init_creates_config"
     "Init creates tickets dir:test_init_creates_tickets_dir"
     "Init creates hooks dir:test_init_creates_hooks_dir"

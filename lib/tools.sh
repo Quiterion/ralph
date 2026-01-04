@@ -26,16 +26,16 @@ cmd_status() {
     load_config
 
     echo ""
-    echo -e "${BOLD}SESSION:${NC} $RALPHS_SESSION"
+    echo -e "${BOLD}SESSION:${NC} $WIGGUM_SESSION"
 
-    if ! session_exists "$RALPHS_SESSION"; then
+    if ! session_exists "$WIGGUM_SESSION"; then
         echo "  (not running)"
         echo ""
         return
     fi
 
     local pane_count
-    pane_count=$(tmux list-panes -t "$RALPHS_SESSION:main" 2>/dev/null | wc -l)
+    pane_count=$(tmux list-panes -t "$WIGGUM_SESSION:main" 2>/dev/null | wc -l)
     echo "  Panes: $pane_count"
     echo ""
 
@@ -100,7 +100,7 @@ cmd_status() {
 # Fetch summarized progress from a worker
 cmd_fetch() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs fetch <pane-id> [prompt]"
+        error "Usage: wiggum fetch <pane-id> [prompt]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -111,7 +111,7 @@ cmd_fetch() {
     require_project
     load_config
 
-    if ! session_exists "$RALPHS_SESSION"; then
+    if ! session_exists "$WIGGUM_SESSION"; then
         error "Session not found"
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
@@ -119,7 +119,7 @@ cmd_fetch() {
     # Find pane by title or index
     local target_pane=""
     local panes
-    panes=$(tmux list-panes -t "$RALPHS_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
+    panes=$(tmux list-panes -t "$WIGGUM_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
 
     while IFS= read -r line; do
         local idx
@@ -139,7 +139,7 @@ cmd_fetch() {
 
     # Capture pane output
     local pane_output
-    pane_output=$(tmux capture-pane -t "$RALPHS_SESSION:main.$target_pane" -p -S -100 2>/dev/null)
+    pane_output=$(tmux capture-pane -t "$WIGGUM_SESSION:main.$target_pane" -p -S -100 2>/dev/null)
 
     # Get ticket info if available
     local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
@@ -189,8 +189,8 @@ Provide a concise summary (2-3 sentences max). Focus on:
 "
 
     # Invoke ephemeral agent
-    if command -v "$RALPHS_AGENT_CMD" &>/dev/null; then
-        echo "$context" | "$RALPHS_AGENT_CMD" --print 2>/dev/null || echo "$context"
+    if command -v "$WIGGUM_AGENT_CMD" &>/dev/null; then
+        echo "$context" | "$WIGGUM_AGENT_CMD" --print 2>/dev/null || echo "$context"
     else
         # Fallback: just show recent activity indicator
         local lines
@@ -214,7 +214,7 @@ cmd_digest() {
     require_project
     load_config
 
-    if ! session_exists "$RALPHS_SESSION"; then
+    if ! session_exists "$WIGGUM_SESSION"; then
         error "Session not found"
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
@@ -276,8 +276,8 @@ Provide a brief executive summary.
 "
 
     # Invoke ephemeral agent or fallback
-    if command -v "$RALPHS_AGENT_CMD" &>/dev/null; then
-        echo "$context" | "$RALPHS_AGENT_CMD" --print 2>/dev/null || echo "$context"
+    if command -v "$WIGGUM_AGENT_CMD" &>/dev/null; then
+        echo "$context" | "$WIGGUM_AGENT_CMD" --print 2>/dev/null || echo "$context"
     else
         # Fallback: show raw context
         echo "$context"
@@ -287,7 +287,7 @@ Provide a brief executive summary.
 # Show raw pane logs
 cmd_logs() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs logs <pane-id> [--tail N] [--follow]"
+        error "Usage: wiggum logs <pane-id> [--tail N] [--follow]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -315,7 +315,7 @@ cmd_logs() {
     require_project
     load_config
 
-    if ! session_exists "$RALPHS_SESSION"; then
+    if ! session_exists "$WIGGUM_SESSION"; then
         error "Session not found"
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
@@ -323,7 +323,7 @@ cmd_logs() {
     # Find pane
     local target_pane=""
     local panes
-    panes=$(tmux list-panes -t "$RALPHS_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
+    panes=$(tmux list-panes -t "$WIGGUM_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
 
     while IFS= read -r line; do
         local idx
@@ -343,22 +343,22 @@ cmd_logs() {
 
     if [[ "$follow" == "true" ]]; then
         # Attach in view mode
-        tmux capture-pane -t "$RALPHS_SESSION:main.$target_pane" -p -S -"$tail_lines"
+        tmux capture-pane -t "$WIGGUM_SESSION:main.$target_pane" -p -S -"$tail_lines"
         echo "---"
         echo "(Following... Ctrl+C to exit)"
         while true; do
             sleep 1
-            tmux capture-pane -t "$RALPHS_SESSION:main.$target_pane" -p -S -1 2>/dev/null || break
+            tmux capture-pane -t "$WIGGUM_SESSION:main.$target_pane" -p -S -1 2>/dev/null || break
         done
     else
-        tmux capture-pane -t "$RALPHS_SESSION:main.$target_pane" -p -S -"$tail_lines"
+        tmux capture-pane -t "$WIGGUM_SESSION:main.$target_pane" -p -S -"$tail_lines"
     fi
 }
 
 # Build context for an agent about to work on a ticket
 cmd_context() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: ralphs context <ticket-id> [prompt]"
+        error "Usage: wiggum context <ticket-id> [prompt]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -432,8 +432,8 @@ $prompt
 "
 
     # Output or process
-    if command -v "$RALPHS_AGENT_CMD" &>/dev/null && [[ "$prompt" != "Provide a full briefing for working on this ticket." ]]; then
-        echo "$context" | "$RALPHS_AGENT_CMD" --print 2>/dev/null || echo "$context"
+    if command -v "$WIGGUM_AGENT_CMD" &>/dev/null && [[ "$prompt" != "Provide a full briefing for working on this ticket." ]]; then
+        echo "$context" | "$WIGGUM_AGENT_CMD" --print 2>/dev/null || echo "$context"
     else
         echo "$context"
     fi
@@ -461,8 +461,8 @@ cmd_ephemeral() {
     local input
     input=$(cat)
 
-    if command -v "$RALPHS_AGENT_CMD" &>/dev/null; then
-        echo -e "$prompt\n\n$input" | "$RALPHS_AGENT_CMD" --print 2>/dev/null
+    if command -v "$WIGGUM_AGENT_CMD" &>/dev/null; then
+        echo -e "$prompt\n\n$input" | "$WIGGUM_AGENT_CMD" --print 2>/dev/null
     else
         echo "$input"
     fi

@@ -26,7 +26,7 @@ cmd_status() {
     load_config
 
     echo ""
-    echo "${BOLD}SESSION:${NC} $RALPHS_SESSION"
+    echo -e "${BOLD}SESSION:${NC} $RALPHS_SESSION"
 
     if ! session_exists "$RALPHS_SESSION"; then
         echo "  (not running)"
@@ -40,8 +40,8 @@ cmd_status() {
     echo ""
 
     # Show agents
-    echo "${BOLD}AGENTS:${NC}"
-    local registry="$PROJECT_ROOT/$PANE_REGISTRY_FILE"
+    echo -e "${BOLD}AGENTS:${NC}"
+    local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
     if [[ -f "$registry" ]] && [[ -s "$registry" ]] && [[ "$(cat "$registry")" != "[]" ]]; then
         while IFS= read -r line; do
             local pane
@@ -72,7 +72,7 @@ cmd_status() {
     echo ""
 
     # Show ticket summary
-    echo "${BOLD}TICKETS:${NC}"
+    echo -e "${BOLD}TICKETS:${NC}"
     for state in ready claimed implement review qa "done"; do
         local count=0
         for ticket_file in "$TICKETS_DIR"/*.md; do
@@ -86,7 +86,7 @@ cmd_status() {
     echo ""
 
     if [[ "$verbose" == "true" ]]; then
-        echo "${BOLD}READY TICKETS:${NC}"
+        echo -e "${BOLD}READY TICKETS:${NC}"
         ticket_ready | while read -r id; do
             local title
     title=$(grep -m1 '^# ' "$TICKETS_DIR/${id}.md" | sed 's/^# //')
@@ -141,7 +141,7 @@ cmd_fetch() {
     pane_output=$(tmux capture-pane -t "$RALPHS_SESSION:main.$target_pane" -p -S -100 2>/dev/null)
 
     # Get ticket info if available
-    local registry="$PROJECT_ROOT/$PANE_REGISTRY_FILE"
+    local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
     local ticket_id=""
     local ticket_content=""
 
@@ -224,7 +224,7 @@ cmd_digest() {
 "
 
     # Add agent summaries
-    local registry="$PROJECT_ROOT/$PANE_REGISTRY_FILE"
+    local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
     if [[ -f "$registry" ]] && [[ -s "$registry" ]]; then
         context="$context## Active Agents
 
@@ -404,12 +404,12 @@ $(<"$ticket_path")
     fi
 
     # Look for related specs
-    if [[ -d "$PROJECT_ROOT/specs" ]]; then
+    if [[ -d "$MAIN_PROJECT_ROOT/specs" ]]; then
         local title
     title=$(grep -m1 '^# ' "$ticket_path" | sed 's/^# //' | tr '[:upper:]' '[:lower:]')
         local related_specs=""
 
-        for spec_file in "$PROJECT_ROOT/specs"/*.md "$PROJECT_ROOT/specs"/**/*.md; do
+        for spec_file in "$MAIN_PROJECT_ROOT/specs"/*.md "$MAIN_PROJECT_ROOT/specs"/**/*.md; do
             [[ -f "$spec_file" ]] || continue
             # Simple keyword matching
             if grep -qi "$title" "$spec_file" 2>/dev/null; then

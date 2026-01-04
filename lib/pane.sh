@@ -147,8 +147,8 @@ build_agent_prompt() {
     fi
 
     # Gather project specs (for supervisor)
-    if [[ "$role" == "supervisor" ]] && [[ -d "$PROJECT_ROOT/specs" ]]; then
-        project_specs=$(find "$PROJECT_ROOT/specs" -name "*.md" -exec basename {} \; 2>/dev/null | head -20 | tr '\n' ', ')
+    if [[ "$role" == "supervisor" ]] && [[ -d "$MAIN_PROJECT_ROOT/specs" ]]; then
+        project_specs=$(find "$MAIN_PROJECT_ROOT/specs" -name "*.md" -exec basename {} \; 2>/dev/null | head -20 | tr '\n' ', ')
         project_specs="Available specs: $project_specs"
     fi
 

@@ -209,7 +209,7 @@ Provide a concise summary (2-3 sentences max). Focus on:
     lines=$(echo "$pane_output" | wc -l)
         local last_line
     last_line=$(echo "$pane_output" | tail -1)
-        echo "Pane $pane_id: $lines lines of output"
+        echo "Agent $agent_id: $lines lines of output"
         echo "Last activity: $last_line"
         if [[ -n "$ticket_id" ]]; then
             local state

@@ -264,9 +264,9 @@ cmd_spawn() {
 
     # Build agent_id
     local agent_index
-    agent_index=$(get_next_pane_index "$role")
+    agent_index=$(get_next_agent_index "$role")
     # Strip any whitespace/newlines that might have crept in
-    agent_index="${pane_index//[$'\t\r\n ']/}"
+    agent_index="${agent_index//[$'\t\r\n ']/}"
     local agent_id="${role}-${agent_index}"
 
     # Build the agent command

@@ -219,7 +219,7 @@ test_ticket_transition_full_workflow() {
     "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress --no-hooks
     "$WIGGUM_BIN" ticket transition "$ticket_id" review --no-hooks
     "$WIGGUM_BIN" ticket transition "$ticket_id" qa --no-hooks
-    "$WIGGUM_BIN" ticket transition "$ticket_id" done --no-hooks
+    "$WIGGUM_BIN" ticket transition "$ticket_id" "done" --no-hooks
 
     local content
     content=$(cat ".wiggum/tickets/${ticket_id}.md")
@@ -245,7 +245,7 @@ test_ticket_transition_review_rejection() {
 
     "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress --no-hooks
     "$WIGGUM_BIN" ticket transition "$ticket_id" review --no-hooks
-    "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress --no-hooks  # Rejected!
+    "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress --no-hooks # Rejected!
 
     local content
     content=$(cat ".wiggum/tickets/${ticket_id}.md")

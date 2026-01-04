@@ -45,12 +45,12 @@ write_ticket() {
     local content="$2"
     local commit_msg="${3:-Update ticket: $id}"
 
-    if has_ticket_clone; then
-        echo "$content" >"$TICKETS_DIR/${id}.md"
-        ticket_sync_push "$commit_msg" || true
-    else
-        bare_write_ticket "${id}.md" "$content" "$commit_msg"
-    fi
+    #if has_ticket_clone; then
+    echo "$content" >"$TICKETS_DIR/${id}.md"
+    ticket_sync_push "$commit_msg" || true
+    #else
+    #    bare_write_ticket "${id}.md" "$content" "$commit_msg"
+    #fi
 }
 
 # Get frontmatter value from ticket (works with both modes)

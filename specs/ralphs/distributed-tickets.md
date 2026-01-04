@@ -9,18 +9,19 @@ When multiple agents work in parallel (each in their own git worktree), they nee
 ## Architecture
 
 ```
-proj/                                  ← main project (human's workspace, no agent)
+proj/                                  ← main project (human's workspace)
 ├── .ralphs/
 │   ├── tickets.git/                   ← bare repo (origin), hooks live here
+│   ├── tickets/                       ← clone (for CLI commands from main project)
 │   ├── config.sh
 │   ├── hooks/
 │   └── prompts/
-├── .gitignore                         ← includes .ralphs/tickets.git/, worktrees/
+├── .gitignore                         ← includes .ralphs/tickets.git/, .ralphs/tickets/, worktrees/
 ├── src/...
 └── worktrees/
     ├── supervisor/                    ← supervisor's worktree
     │   └── .ralphs/
-    │       └── tickets/               ← clone of ../../.ralphs/tickets.git
+    │       └── tickets/               ← clone
     ├── impl-0/
     │   └── .ralphs/
     │       └── tickets/               ← clone
@@ -32,8 +33,8 @@ proj/                                  ← main project (human's workspace, no a
 ### Key Principles
 
 1. **Tickets repo is separate from project repo** - ticket churn doesn't pollute project history
-2. **Bare repo is the origin** - everyone (including supervisor) clones from it
-3. **Main worktree stays clean** - human's workspace, no agent runs here
+2. **Bare repo is the origin** - everyone clones from it
+3. **All contexts have a clone** - main project and each worktree has its own clone for local operations
 4. **Supervisor in own worktree** - supervisor is just another worktree, not special to git
 5. **Hooks fire on bare repo** - pre-receive validates, post-receive triggers actions
 
@@ -85,20 +86,17 @@ ralphs init [--session NAME]
    git -C "$tmp" push origin main
    rm -rf "$tmp"
    ```
-4. Add to project's `.gitignore`:
+4. Clone tickets into main project:
+   ```bash
+   git clone .ralphs/tickets.git .ralphs/tickets
+   ```
+5. Add to project's `.gitignore`:
    ```
    .ralphs/tickets.git/
+   .ralphs/tickets/
    worktrees/
    ```
-5. Create supervisor worktree:
-   ```bash
-   git worktree add worktrees/supervisor -b supervisor
-   ```
-6. Clone tickets into supervisor's worktree:
-   ```bash
-   git clone ../../../.ralphs/tickets.git worktrees/supervisor/.ralphs/tickets
-   ```
-7. Create tmux session, spawn supervisor agent, etc.
+6. Create tmux session, spawn supervisor agent, etc.
 
 ### Spawning workers
 
@@ -406,9 +404,11 @@ If two workers try to transition the same ticket:
 ### Human interaction
 
 The human works in the main project directory (`proj/`). They can:
-- View tickets: `ralphs ticket list` (reads from bare repo or any clone)
-- Create tickets: creates in bare repo directly or via temp clone
+- View tickets: `ralphs ticket list` (reads from their local clone)
+- Create tickets: creates locally, pushes to bare repo
 - Attach to session: `ralphs attach` to observe/intervene
+
+The main project has its own clone at `.ralphs/tickets/`, so all CLI commands work the same as in worktrees.
 
 ## Future Considerations
 

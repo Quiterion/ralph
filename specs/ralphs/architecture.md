@@ -49,11 +49,14 @@
 ## Directory Structure
 
 ```
-project/                               # main project (human's workspace, no agent)
+project/                               # main project (human's workspace)
 ├── .ralphs/
 │   ├── config.sh                      # harness configuration
 │   ├── tickets.git/                   # bare repo (ticket origin)
 │   │   └── hooks/                     # pre-receive, post-receive
+│   ├── tickets/                       # clone (for CLI commands from main project)
+│   │   ├── tk-5c46.md
+│   │   └── tk-8a2b.md
 │   ├── hooks/                         # state transition hooks
 │   │   ├── on-claim
 │   │   ├── on-implement-done
@@ -68,16 +71,14 @@ project/                               # main project (human's workspace, no age
 │       └── qa.md
 ├── worktrees/                         # agent worktrees
 │   ├── supervisor-0/                  # supervisor's worktree
-│   │   └── .ralphs/tickets/           # clone (this is the "main" tickets view)
-│   │       ├── tk-5c46.md
-│   │       └── tk-8a2b.md
+│   │   └── .ralphs/tickets/           # clone
 │   └── impl-0/
 │       └── .ralphs/tickets/           # clone
 ├── specs/                             # project specifications
 └── AGENT.md                           # inner harness instructions
 ```
 
-Each agent works in its own git worktree with a cloned tickets repo. The supervisor's worktree holds the "main" tickets view. See [distributed-tickets.md](./distributed-tickets.md) for synchronization details.
+Each agent works in its own git worktree with a cloned tickets repo. The main project also has a clone for running CLI commands. See [distributed-tickets.md](./distributed-tickets.md) for synchronization details.
 
 ---
 

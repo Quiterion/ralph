@@ -407,7 +407,7 @@ $ticket_content
     # Look for related specs
     if [[ -d "$MAIN_PROJECT_ROOT/specs" ]]; then
         local title
-    title=$(grep -m1 '^# ' "$ticket_path" | sed 's/^# //' | tr '[:upper:]' '[:lower:]')
+        title=$(echo "$ticket_content" | grep -m1 '^# ' | sed 's/^# //' | tr '[:upper:]' '[:lower:]')
         local related_specs=""
 
         for spec_file in "$MAIN_PROJECT_ROOT/specs"/*.md "$MAIN_PROJECT_ROOT/specs"/**/*.md; do

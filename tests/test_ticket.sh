@@ -167,42 +167,30 @@ test_ticket_show_not_found() {
 }
 
 #
-# Tests: Ticket claim
+# Tests: Ticket transition to in-progress
 #
 
-test_ticket_claim() {
+test_ticket_start() {
     "$WIGGUM_BIN" init
     local ticket_id
-    ticket_id=$("$WIGGUM_BIN" ticket create "Claim me")
+    ticket_id=$("$WIGGUM_BIN" ticket create "Start me")
 
-    "$WIGGUM_BIN" ticket claim "$ticket_id"
+    "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress
 
     local content
     content=$(cat ".wiggum/tickets/${ticket_id}.md")
     assert_contains "$content" "state: in-progress" "Ticket should be in-progress"
 }
 
-test_ticket_claim_sets_timestamp() {
+test_ticket_start_from_ready_only() {
     "$WIGGUM_BIN" init
     local ticket_id
-    ticket_id=$("$WIGGUM_BIN" ticket create "Claim with time")
+    ticket_id=$("$WIGGUM_BIN" ticket create "Double start")
 
-    "$WIGGUM_BIN" ticket claim "$ticket_id"
+    "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress
 
-    local content
-    content=$(cat ".wiggum/tickets/${ticket_id}.md")
-    assert_contains "$content" "assigned_at:" "Should set assigned_at"
-}
-
-test_ticket_claim_already_in-progress() {
-    "$WIGGUM_BIN" init
-    local ticket_id
-    ticket_id=$("$WIGGUM_BIN" ticket create "Double claim")
-
-    "$WIGGUM_BIN" ticket claim "$ticket_id"
-
-    if "$WIGGUM_BIN" ticket claim "$ticket_id" 2>/dev/null; then
-        echo "Should fail to claim already in-progress ticket"
+    if "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress 2>/dev/null; then
+        echo "Should fail to start already in-progress ticket"
         return 1
     fi
 }
@@ -216,7 +204,6 @@ test_ticket_transition_valid() {
     local ticket_id
     ticket_id=$("$WIGGUM_BIN" ticket create "Transition me")
 
-    "$WIGGUM_BIN" ticket claim "$ticket_id"
     "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress
 
     local content
@@ -229,11 +216,10 @@ test_ticket_transition_full_workflow() {
     local ticket_id
     ticket_id=$("$WIGGUM_BIN" ticket create "Full workflow")
 
-    "$WIGGUM_BIN" ticket claim "$ticket_id"
     "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress --no-hooks
     "$WIGGUM_BIN" ticket transition "$ticket_id" review --no-hooks
     "$WIGGUM_BIN" ticket transition "$ticket_id" qa --no-hooks
-    "$WIGGUM_BIN" ticket transition "$ticket_id" "done" --no-hooks
+    "$WIGGUM_BIN" ticket transition "$ticket_id" done --no-hooks
 
     local content
     content=$(cat ".wiggum/tickets/${ticket_id}.md")
@@ -257,7 +243,6 @@ test_ticket_transition_review_rejection() {
     local ticket_id
     ticket_id=$("$WIGGUM_BIN" ticket create "Rejected")
 
-    "$WIGGUM_BIN" ticket claim "$ticket_id"
     "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress --no-hooks
     "$WIGGUM_BIN" ticket transition "$ticket_id" review --no-hooks
     "$WIGGUM_BIN" ticket transition "$ticket_id" in-progress --no-hooks  # Rejected!
@@ -433,10 +418,9 @@ TICKET_TESTS=(
     "Ticket show partial ID:test_ticket_show_partial_id"
     "Ticket show not found:test_ticket_show_not_found"
 
-    # Claim
-    "Ticket claim:test_ticket_claim"
-    "Ticket claim sets timestamp:test_ticket_claim_sets_timestamp"
-    "Ticket claim already in-progress:test_ticket_claim_already_in-progress"
+    # Start (transition to in-progress)
+    "Ticket start:test_ticket_start"
+    "Ticket start from ready only:test_ticket_start_from_ready_only"
 
     # Transition
     "Ticket transition valid:test_ticket_transition_valid"

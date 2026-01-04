@@ -6,7 +6,7 @@
 #
 
 # Valid states and transitions
-VALID_STATES=("ready" "in-progress" "review" "qa" "done", "closed")
+VALID_STATES=("ready" "in-progress" "review" "qa" "done" "closed")
 
 #
 # Ticket I/O abstraction layer

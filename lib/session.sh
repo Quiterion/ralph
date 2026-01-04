@@ -14,10 +14,10 @@ cmd_init() {
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            *)
-                error "Unknown option: $1"
-                exit "$EXIT_INVALID_ARGS"
-                ;;
+        *)
+            error "Unknown option: $1"
+            exit "$EXIT_INVALID_ARGS"
+            ;;
         esac
     done
 
@@ -54,7 +54,7 @@ cmd_init() {
     WIGGUM_DIR="$PROJECT_ROOT/.wiggum"
     MAIN_WIGGUM_DIR="$WIGGUM_DIR"
     TICKETS_DIR="$WIGGUM_DIR/tickets"
-    MAIN_TICKETS_DIR="$TICKETS_DIR"  # At init, they're the same
+    MAIN_TICKETS_DIR="$TICKETS_DIR" # At init, they're the same
     export PROJECT_ROOT MAIN_PROJECT_ROOT WIGGUM_DIR MAIN_WIGGUM_DIR TICKETS_DIR MAIN_TICKETS_DIR
 
     # Initialize bare tickets repository
@@ -71,7 +71,7 @@ cmd_init() {
     local entries=(".wiggum/tickets.git/" ".wiggum/tickets/" "worktrees/")
     for entry in "${entries[@]}"; do
         if ! grep -qxF "$entry" "$gitignore" 2>/dev/null; then
-            echo "$entry" >> "$gitignore"
+            echo "$entry" >>"$gitignore"
         fi
     done
 
@@ -81,7 +81,7 @@ cmd_init() {
         mkdir -p "$claude_dir"
     fi
     if [[ ! -f "$claude_dir/settings.local.json" ]]; then
-        cat > "$claude_dir/settings.local.json" <<'CLAUDE_SETTINGS'
+        cat >"$claude_dir/settings.local.json" <<'CLAUDE_SETTINGS'
 {
   "permissions": {
     "allow": [
@@ -90,7 +90,8 @@ cmd_init() {
       "Bash(git commit:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(wiggum:*)"
     ]
   }
 }
@@ -98,7 +99,7 @@ CLAUDE_SETTINGS
         success "Created Claude Code settings"
         # Add to gitignore
         if ! grep -qxF ".claude/settings.local.json" "$gitignore" 2>/dev/null; then
-            echo ".claude/settings.local.json" >> "$gitignore"
+            echo ".claude/settings.local.json" >>"$gitignore"
         fi
     fi
 
@@ -145,14 +146,14 @@ cmd_attach() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --session)
-                session_name="$2"
-                shift 2
-                ;;
-            *)
-                error "Unknown option: $1"
-                exit "$EXIT_INVALID_ARGS"
-                ;;
+        --session)
+            session_name="$2"
+            shift 2
+            ;;
+        *)
+            error "Unknown option: $1"
+            exit "$EXIT_INVALID_ARGS"
+            ;;
         esac
     done
 
@@ -173,14 +174,14 @@ cmd_teardown() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --force)
-                force=true
-                shift
-                ;;
-            *)
-                error "Unknown option: $1"
-                exit "$EXIT_INVALID_ARGS"
-                ;;
+        --force)
+            force=true
+            shift
+            ;;
+        *)
+            error "Unknown option: $1"
+            exit "$EXIT_INVALID_ARGS"
+            ;;
         esac
     done
 
@@ -208,7 +209,7 @@ cmd_teardown() {
     # Clear the pane registry
     local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
     if [[ -f "$registry" ]]; then
-        echo "{}" > "$registry"
+        echo "{}" >"$registry"
     fi
 
     success "Session terminated"

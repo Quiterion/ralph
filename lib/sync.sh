@@ -10,34 +10,10 @@
 : "${RALPHS_AUTO_SYNC:=true}"
 
 # Check if current tickets dir is the bare repo (origin)
+# This is used to skip sync operations when we're somehow in the bare repo context
 is_ticket_origin() {
     # Bare repos don't have .git subdirectory - they ARE the git directory
     [[ ! -d "$TICKETS_DIR/.git" ]] && [[ -d "$TICKETS_DIR/objects" ]]
-}
-
-# Check if distributed mode is enabled (bare repo exists)
-is_distributed() {
-    require_project
-    [[ -d "$RALPHS_DIR/tickets.git" ]]
-}
-
-# Get the tickets directory (handles both modes)
-get_tickets_dir() {
-    require_project
-
-    if is_distributed; then
-        # In distributed mode, check if we have a clone or are in main project
-        if [[ -d "$RALPHS_DIR/tickets/.git" ]]; then
-            # We have a clone (worktree)
-            echo "$RALPHS_DIR/tickets"
-        else
-            # Main project - use bare repo for reads via temp clone
-            echo "$RALPHS_DIR/tickets.git"
-        fi
-    else
-        # Local mode - simple tickets directory
-        echo "$RALPHS_DIR/tickets"
-    fi
 }
 
 # Initialize the bare tickets repository
@@ -61,16 +37,19 @@ init_bare_tickets_repo() {
     # Create initial commit via temp clone
     local tmp
     tmp=$(mktemp -d)
-    git clone "$tickets_git" "$tmp" --quiet 2>/dev/null
+    git clone "$tickets_git" "$tmp" --quiet 2>/dev/null || true
     git -C "$tmp" config user.email "ralphs@local"
     git -C "$tmp" config user.name "ralphs"
-    git -C "$tmp" config commit.gpgsign false
+    # Create initial branch explicitly
+    git -C "$tmp" checkout -b main 2>/dev/null || true
     touch "$tmp/.gitkeep"
     git -C "$tmp" add .
-    git -C "$tmp" commit -m "Initial commit" --quiet
-    git -C "$tmp" push origin main --quiet 2>/dev/null || \
-        git -C "$tmp" push origin master --quiet 2>/dev/null || true
+    git -c commit.gpgsign=false -C "$tmp" commit -m "Initial commit" --quiet 2>/dev/null || true
+    git -C "$tmp" push -u origin main --quiet 2>/dev/null || true
     rm -rf "$tmp"
+
+    # Set HEAD to main branch
+    git -C "$tickets_git" symbolic-ref HEAD refs/heads/main 2>/dev/null || true
 
     success "Created bare tickets repository"
 }
@@ -104,7 +83,7 @@ while read -r oldrev newrev refname; do
     [[ "$newrev" == "0000000000000000000000000000000000000000" ]] && continue
 
     # Get list of changed files
-    local files
+    files=""
     if [[ "$oldrev" == "0000000000000000000000000000000000000000" ]]; then
         files=$(git ls-tree -r --name-only "$newrev")
     else
@@ -117,7 +96,7 @@ while read -r oldrev newrev refname; do
         [[ "$file" == ".gitkeep" ]] && continue
 
         # Get old and new state
-        local old_state=""
+        old_state=""
         if [[ "$oldrev" != "0000000000000000000000000000000000000000" ]]; then
             old_state=$(git show "$oldrev:$file" 2>/dev/null | awk '/^state:/{print $2}' || echo "")
         fi
@@ -266,7 +245,7 @@ ticket_sync_push() {
     # Stage and commit if there are changes
     git -C "$TICKETS_DIR" add -A 2>/dev/null || true
     git -C "$TICKETS_DIR" diff --cached --quiet 2>/dev/null || \
-        git -C "$TICKETS_DIR" commit -m "$message" --quiet 2>/dev/null || true
+        git -c commit.gpgsign=false -C "$TICKETS_DIR" commit -m "$message" --quiet 2>/dev/null || true
 
     # Push to origin
     git -C "$TICKETS_DIR" push origin main --quiet 2>/dev/null || \
@@ -279,16 +258,10 @@ ticket_sync() {
 
     require_project
 
-    # Check if we're in distributed mode
-    if ! is_distributed; then
-        info "Not in distributed mode (no bare repo)"
-        return 0
-    fi
-
-    # Check if we have a clone
+    # Check if we have a clone (needed for sync)
     if [[ ! -d "$TICKETS_DIR/.git" ]]; then
-        info "No tickets clone in this worktree"
-        return 0
+        warn "No tickets clone found - run 'ralphs init' first"
+        return 1
     fi
 
     case "$mode" in

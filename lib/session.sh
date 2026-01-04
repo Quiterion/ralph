@@ -13,7 +13,6 @@ session_exists() {
 cmd_init() {
     local session_name=""
     local no_session=false
-    local distributed=false
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -24,10 +23,6 @@ cmd_init() {
                 ;;
             --no-session)
                 no_session=true
-                shift
-                ;;
-            --distributed)
-                distributed=true
                 shift
                 ;;
             *)
@@ -44,34 +39,34 @@ cmd_init() {
         info "ralphs directory already exists"
     else
         info "Creating ralphs directory structure..."
-        mkdir -p "$ralphs_dir/tickets"
         mkdir -p "$ralphs_dir/hooks"
         mkdir -p "$ralphs_dir/prompts"
         mkdir -p "$ralphs_dir/tools"
     fi
 
-    # Initialize distributed tickets if requested
-    if [[ "$distributed" == "true" ]]; then
-        # Set PROJECT_ROOT and RALPHS_DIR for sync functions
-        PROJECT_ROOT="$(pwd)"
-        RALPHS_DIR="$PROJECT_ROOT/.ralphs"
-        TICKETS_DIR="$RALPHS_DIR/tickets"
-        export PROJECT_ROOT RALPHS_DIR TICKETS_DIR
+    # Set PROJECT_ROOT and RALPHS_DIR for sync functions
+    PROJECT_ROOT="$(pwd)"
+    RALPHS_DIR="$PROJECT_ROOT/.ralphs"
+    TICKETS_DIR="$RALPHS_DIR/tickets"
+    export PROJECT_ROOT RALPHS_DIR TICKETS_DIR
 
-        init_bare_tickets_repo
+    # Initialize bare tickets repository
+    init_bare_tickets_repo
 
-        # Add to .gitignore
-        local gitignore=".gitignore"
-        # Create .gitignore if it doesn't exist
-        [[ -f "$gitignore" ]] || touch "$gitignore"
-        local entries=(".ralphs/tickets.git/" "worktrees/")
-        for entry in "${entries[@]}"; do
-            if ! grep -qxF "$entry" "$gitignore" 2>/dev/null; then
-                echo "$entry" >> "$gitignore"
-            fi
-        done
-        info "Updated .gitignore for distributed mode"
+    # Clone tickets to local .ralphs/tickets for main worktree
+    if [[ ! -d "$TICKETS_DIR/.git" ]]; then
+        clone_tickets_to_worktree "$RALPHS_DIR"
     fi
+
+    # Add to .gitignore
+    local gitignore=".gitignore"
+    [[ -f "$gitignore" ]] || touch "$gitignore"
+    local entries=(".ralphs/tickets.git/" ".ralphs/tickets/" "worktrees/")
+    for entry in "${entries[@]}"; do
+        if ! grep -qxF "$entry" "$gitignore" 2>/dev/null; then
+            echo "$entry" >> "$gitignore"
+        fi
+    done
 
     # Write config if not exists
     if [[ ! -f "$ralphs_dir/config.sh" ]]; then

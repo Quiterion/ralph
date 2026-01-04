@@ -45,7 +45,7 @@ ralphs - Multi-Agent Orchestration Harness v$RALPHS_VERSION
 Usage: ralphs <command> [options]
 
 Session Management:
-  init [--session NAME] [--distributed]  Initialize a new ralphs session
+  init [--session NAME]         Initialize a new ralphs session
   attach [--session NAME]       Attach to existing session
   teardown [--force]            Tear down session and cleanup
 
@@ -83,7 +83,6 @@ Global Options:
 
 Examples:
   ralphs init
-  ralphs init --distributed     # Enable distributed ticket sync
   ralphs ticket create "Add auth" --type feature
   ralphs spawn supervisor
   ralphs spawn impl tk-5c46

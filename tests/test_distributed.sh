@@ -2,6 +2,8 @@
 #
 # test_distributed.sh - Distributed tickets tests
 #
+# Tests the git-based ticket synchronization system.
+#
 
 # SC2034: Test arrays are used by main test runner via source
 # shellcheck disable=SC2034
@@ -14,14 +16,20 @@ source "$SCRIPT_DIR/framework.sh"
 # Tests
 #
 
-test_init_distributed_creates_bare_repo() {
-    "$RALPHS_BIN" init --no-session --distributed
-    assert_dir_exists ".ralphs/tickets.git" "Distributed init should create bare repo"
+test_init_creates_bare_repo() {
+    "$RALPHS_BIN" init --no-session
+    assert_dir_exists ".ralphs/tickets.git" "Init should create bare repo"
     assert_dir_exists ".ralphs/tickets.git/objects" "Bare repo should have objects dir"
 }
 
-test_init_distributed_has_pre_receive_hook() {
-    "$RALPHS_BIN" init --no-session --distributed
+test_init_creates_tickets_clone() {
+    "$RALPHS_BIN" init --no-session
+    assert_dir_exists ".ralphs/tickets" "Init should create tickets clone"
+    assert_dir_exists ".ralphs/tickets/.git" "Tickets dir should be a git clone"
+}
+
+test_init_has_pre_receive_hook() {
+    "$RALPHS_BIN" init --no-session
     assert_file_exists ".ralphs/tickets.git/hooks/pre-receive" "Should install pre-receive hook"
 
     # Check it's executable
@@ -31,8 +39,8 @@ test_init_distributed_has_pre_receive_hook() {
     fi
 }
 
-test_init_distributed_has_post_receive_hook() {
-    "$RALPHS_BIN" init --no-session --distributed
+test_init_has_post_receive_hook() {
+    "$RALPHS_BIN" init --no-session
     assert_file_exists ".ralphs/tickets.git/hooks/post-receive" "Should install post-receive hook"
 
     # Check it's executable
@@ -42,46 +50,29 @@ test_init_distributed_has_post_receive_hook() {
     fi
 }
 
-test_init_distributed_updates_gitignore() {
-    "$RALPHS_BIN" init --no-session --distributed
+test_init_updates_gitignore() {
+    "$RALPHS_BIN" init --no-session
 
-    # Check .gitignore contains the expected entries
     assert_file_exists ".gitignore" ".gitignore should exist"
 
     local content
     content=$(cat .gitignore)
     assert_contains "$content" ".ralphs/tickets.git/" "Should ignore bare repo"
+    assert_contains "$content" ".ralphs/tickets/" "Should ignore tickets clone"
     assert_contains "$content" "worktrees/" "Should ignore worktrees"
 }
 
-test_init_distributed_creates_initial_commit() {
-    "$RALPHS_BIN" init --no-session --distributed
-
-    # Clone the bare repo and check for initial commit
-    local tmp
-    tmp=$(mktemp -d)
-    git clone .ralphs/tickets.git "$tmp" --quiet 2>/dev/null
-
-    local log
-    log=$(git -C "$tmp" log --oneline 2>/dev/null)
-    assert_contains "$log" "Initial commit" "Bare repo should have initial commit"
-
-    rm -rf "$tmp"
-}
-
-test_is_distributed_false_without_bare_repo() {
+test_init_creates_initial_commit() {
     "$RALPHS_BIN" init --no-session
 
-    # Check that is_distributed returns false
-    # We do this by checking that the bare repo doesn't exist
-    if [[ -d ".ralphs/tickets.git" ]]; then
-        echo "Should not have bare repo without --distributed"
-        return 1
-    fi
+    # Check local clone has initial commit
+    local log
+    log=$(git -C .ralphs/tickets log --oneline 2>/dev/null)
+    assert_contains "$log" "Initial commit" "Tickets clone should have initial commit"
 }
 
 test_ticket_sync_command_exists() {
-    "$RALPHS_BIN" init --no-session --distributed
+    "$RALPHS_BIN" init --no-session
 
     local output
     output=$("$RALPHS_BIN" ticket sync 2>&1)
@@ -93,30 +84,29 @@ test_ticket_sync_command_exists() {
     fi
 }
 
-test_ticket_create_in_distributed_mode() {
-    "$RALPHS_BIN" init --no-session --distributed
+test_ticket_create_syncs_to_repo() {
+    "$RALPHS_BIN" init --no-session
 
-    # Create a ticket with --no-sync to avoid sync issues in test
     local ticket_id
-    ticket_id=$("$RALPHS_BIN" ticket create "Distributed test" --no-sync)
+    ticket_id=$("$RALPHS_BIN" ticket create "Sync test")
 
-    assert_file_exists ".ralphs/tickets/${ticket_id}.md" "Ticket should be created"
+    # Ticket should exist in local clone
+    assert_file_exists ".ralphs/tickets/${ticket_id}.md" "Ticket should be created in clone"
+
+    # Check if commit was pushed to bare repo
+    local log
+    log=$(git -C .ralphs/tickets.git log --oneline 2>/dev/null || echo "")
+    assert_contains "$log" "Create ticket" "Ticket creation should be pushed to bare repo"
 }
 
-test_distributed_tickets_have_merge_strategy() {
-    "$RALPHS_BIN" init --no-session --distributed
+test_tickets_have_merge_strategy() {
+    "$RALPHS_BIN" init --no-session
 
     assert_file_exists ".ralphs/tickets.git/info/attributes" "Should have attributes file"
 
     local content
     content=$(cat .ralphs/tickets.git/info/attributes)
     assert_contains "$content" "*.md merge=union" "Should set union merge for markdown"
-}
-
-test_help_shows_distributed_flag() {
-    local output
-    output=$("$RALPHS_BIN" --help)
-    assert_contains "$output" "--distributed" "Help should show --distributed flag"
 }
 
 test_help_shows_ticket_sync() {
@@ -130,16 +120,15 @@ test_help_shows_ticket_sync() {
 #
 
 DISTRIBUTED_TESTS=(
-    "Init distributed creates bare repo:test_init_distributed_creates_bare_repo"
-    "Init distributed has pre-receive hook:test_init_distributed_has_pre_receive_hook"
-    "Init distributed has post-receive hook:test_init_distributed_has_post_receive_hook"
-    "Init distributed updates gitignore:test_init_distributed_updates_gitignore"
-    "Init distributed creates initial commit:test_init_distributed_creates_initial_commit"
-    "Is distributed false without bare repo:test_is_distributed_false_without_bare_repo"
+    "Init creates bare repo:test_init_creates_bare_repo"
+    "Init creates tickets clone:test_init_creates_tickets_clone"
+    "Init has pre-receive hook:test_init_has_pre_receive_hook"
+    "Init has post-receive hook:test_init_has_post_receive_hook"
+    "Init updates gitignore:test_init_updates_gitignore"
+    "Init creates initial commit:test_init_creates_initial_commit"
     "Ticket sync command exists:test_ticket_sync_command_exists"
-    "Ticket create in distributed mode:test_ticket_create_in_distributed_mode"
-    "Distributed tickets have merge strategy:test_distributed_tickets_have_merge_strategy"
-    "Help shows distributed flag:test_help_shows_distributed_flag"
+    "Ticket create syncs to repo:test_ticket_create_syncs_to_repo"
+    "Tickets have merge strategy:test_tickets_have_merge_strategy"
     "Help shows ticket sync:test_help_shows_ticket_sync"
 )
 

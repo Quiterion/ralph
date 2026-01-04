@@ -181,9 +181,11 @@ cmd_spawn() {
     require_command tmux
 
     # Create session if it doesn't exist
+    local new_session=false
     if ! session_exists "$WIGGUM_SESSION"; then
         info "Creating tmux session: $WIGGUM_SESSION"
         tmux new-session -d -s "$WIGGUM_SESSION" -n "main"
+        new_session=true
     fi
 
     # Supervisor doesn't need a ticket
@@ -219,8 +221,8 @@ cmd_spawn() {
         mkdir -p "$worktree_path/.wiggum/hooks"
         mkdir -p "$worktree_path/.wiggum/prompts"
 
-        # Clone tickets repo into worktree
-        clone_tickets_to_worktree "$worktree_path/.wiggum"
+        # Clone tickets repo into worktree (optional - may not have bare repo)
+        clone_tickets_to_worktree "$worktree_path/.wiggum" || true
 
         # Copy hooks and prompts
         # shellcheck disable=SC2015
@@ -232,10 +234,15 @@ cmd_spawn() {
     # Create new pane
     info "Spawning $pane_name${ticket_id:+ for $ticket_id}..."
 
-    # Split window to create new pane
-    tmux split-window -t "$WIGGUM_SESSION:main" -h
     local new_pane
-    new_pane=$(tmux display-message -t "$WIGGUM_SESSION:main" -p '#{pane_index}')
+    if [[ "$new_session" == "true" ]]; then
+        # Reuse the initial pane created with the session
+        new_pane=0
+    else
+        # Split window to create new pane
+        tmux split-window -t "$WIGGUM_SESSION:main" -h
+        new_pane=$(tmux display-message -t "$WIGGUM_SESSION:main" -p '#{pane_index}')
+    fi
 
     # Set pane title
     tmux select-pane -t "$WIGGUM_SESSION:main.$new_pane" -T "$pane_name"
@@ -255,7 +262,7 @@ cmd_spawn() {
     tmux send-keys -t "$WIGGUM_SESSION:main.$new_pane" "$agent_cmd" Enter
 
     # Wait for agent to initialize (give it time to show welcome banner)
-    sleep 2
+    sleep 4
 
     # Send the initial prompt using vim-safe input
     local initial_msg="Please read your role instructions from .wiggum/current_prompt.md and begin your work. Your role is: $role${ticket_id:+, assigned ticket: $ticket_id}"

@@ -249,7 +249,7 @@ HOOK
 # Clone tickets repo into a worktree's .wiggum directory
 clone_tickets_to_worktree() {
     local worktree_wiggum="$1"
-    local bare_repo="$WIGGUM_DIR/tickets.git"
+    local bare_repo="$MAIN_WIGGUM_DIR/tickets.git"
 
     if [[ ! -d "$bare_repo" ]]; then
         warn "Bare tickets repo not found, skipping clone"

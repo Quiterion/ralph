@@ -803,6 +803,120 @@ test_teardown_fails_no_session() {
 }
 
 #
+# Tests: Observability tools
+#
+
+test_fetch_requires_pane_id() {
+    "$RALPHS_BIN" init --no-session
+
+    # fetch without pane-id should fail
+    if "$RALPHS_BIN" fetch 2>/dev/null; then
+        echo "Fetch should require pane-id argument"
+        return 1
+    fi
+}
+
+test_fetch_fails_no_session() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    "$RALPHS_BIN" init --no-session
+
+    # fetch with no session should fail
+    if "$RALPHS_BIN" fetch impl-0 2>/dev/null; then
+        echo "Fetch should fail without session"
+        return 1
+    fi
+}
+
+test_fetch_pane_not_found() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    local session
+    session=$(test_session_name)
+    export RALPHS_SESSION="$session"
+    trap "cleanup_test_session '$session'" RETURN
+
+    "$RALPHS_BIN" init --session "$session"
+
+    # fetch non-existent pane should fail
+    if "$RALPHS_BIN" fetch nonexistent-pane 2>/dev/null; then
+        echo "Fetch should fail for non-existent pane"
+        return 1
+    fi
+
+    cleanup_test_session "$session"
+}
+
+test_logs_requires_pane_id() {
+    "$RALPHS_BIN" init --no-session
+
+    # logs without pane-id should fail
+    if "$RALPHS_BIN" logs 2>/dev/null; then
+        echo "Logs should require pane-id argument"
+        return 1
+    fi
+}
+
+test_logs_fails_no_session() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    "$RALPHS_BIN" init --no-session
+
+    # logs with no session should fail
+    if "$RALPHS_BIN" logs impl-0 2>/dev/null; then
+        echo "Logs should fail without session"
+        return 1
+    fi
+}
+
+test_digest_fails_no_session() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    "$RALPHS_BIN" init --no-session
+
+    # digest with no session should fail
+    if "$RALPHS_BIN" digest 2>/dev/null; then
+        echo "Digest should fail without session"
+        return 1
+    fi
+}
+
+test_context_requires_ticket_id() {
+    "$RALPHS_BIN" init --no-session
+
+    # context without ticket-id should fail
+    if "$RALPHS_BIN" context 2>/dev/null; then
+        echo "Context should require ticket-id argument"
+        return 1
+    fi
+}
+
+test_context_builds_for_ticket() {
+    "$RALPHS_BIN" init --no-session
+    local ticket_id
+    ticket_id=$("$RALPHS_BIN" ticket create "Context test" --type feature)
+
+    local output
+    output=$("$RALPHS_BIN" context "$ticket_id")
+
+    # Should include ticket content
+    assert_contains "$output" "Context test" "Should include ticket title"
+    assert_contains "$output" "feature" "Should include ticket type"
+}
+
+#
 # Main
 #
 
@@ -886,6 +1000,16 @@ main() {
         "Tmux status shows overview:test_status_shows_overview"
         "Tmux attach fails no session:test_attach_fails_no_session"
         "Tmux teardown fails no session:test_teardown_fails_no_session"
+
+        # Observability tools
+        "Fetch requires pane-id:test_fetch_requires_pane_id"
+        "Fetch fails no session:test_fetch_fails_no_session"
+        "Fetch pane not found:test_fetch_pane_not_found"
+        "Logs requires pane-id:test_logs_requires_pane_id"
+        "Logs fails no session:test_logs_fails_no_session"
+        "Digest fails no session:test_digest_fails_no_session"
+        "Context requires ticket-id:test_context_requires_ticket_id"
+        "Context builds for ticket:test_context_builds_for_ticket"
     )
 
     for test_entry in "${tests[@]}"; do

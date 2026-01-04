@@ -156,6 +156,16 @@ assert_dir_exists() {
     fi
 }
 
+assert_not_exists() {
+    local path="$1"
+    local msg="${2:-Path should not exist: $path}"
+
+    if [[ -e "$path" ]]; then
+        echo "Assertion failed: $msg"
+        return 1
+    fi
+}
+
 #
 # Tmux helpers
 #

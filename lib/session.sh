@@ -32,6 +32,22 @@ cmd_init() {
         esac
     done
 
+    # Check if already in a ralphs project (handles running from subdirs or .ralphs/tickets/)
+    local project_root
+    if project_root=$(get_project_root 2>/dev/null); then
+        info "Already in ralphs project at $project_root"
+        cd "$project_root" || exit $EXIT_ERROR
+    else
+        # Find git root - ralphs must be initialized at the repo root
+        local git_root
+        if ! git_root=$(get_git_root); then
+            error "Not in a git repository. Run 'git init' first."
+            exit $EXIT_ERROR
+        fi
+        # Change to git root for all operations
+        cd "$git_root" || exit $EXIT_ERROR
+    fi
+
     # Create .ralphs directory structure
     local ralphs_dir=".ralphs"
 

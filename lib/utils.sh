@@ -89,6 +89,11 @@ duration_since() {
     fi
 }
 
+# Get git repository root
+get_git_root() {
+    git rev-parse --show-toplevel 2>/dev/null
+}
+
 # Get project root (directory containing .ralphs/)
 # shellcheck disable=SC2120  # Function accepts optional arg with default
 get_project_root() {

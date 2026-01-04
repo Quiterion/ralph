@@ -9,11 +9,20 @@
 # Get overall status of the hive
 cmd_status() {
     local verbose=false
+    local format="table"
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --verbose|-v)
                 verbose=true
+                shift
+                ;;
+            --format)
+                format="$2"
+                shift 2
+                ;;
+            --format=*)
+                format="${1#*=}"
                 shift
                 ;;
             *)
@@ -24,6 +33,27 @@ cmd_status() {
 
     require_project
     load_config
+
+    # Tmux status bar format: compact one-liner
+    if [[ "$format" == "tmux" ]]; then
+        local agent_count=0
+        local ready_count=0
+        local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
+
+        if [[ -f "$registry" ]] && command -v jq &>/dev/null; then
+            agent_count=$(jq 'length' "$registry" 2>/dev/null || echo 0)
+        fi
+
+        for ticket_file in "$TICKETS_DIR"/*.md; do
+            [[ -f "$ticket_file" ]] || continue
+            local s
+            s=$(get_frontmatter_value "$ticket_file" "state" 2>/dev/null)
+            [[ "$s" == "ready" ]] && ready_count=$((ready_count + 1))
+        done
+
+        echo "#[fg=green]${agent_count}#[default] #[fg=yellow]${ready_count}#[default]"
+        return
+    fi
 
     echo ""
     echo -e "${BOLD}SESSION:${NC} $WIGGUM_SESSION"

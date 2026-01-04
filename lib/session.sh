@@ -87,6 +87,12 @@ cmd_init() {
     done
     success "Hooks initialized"
 
+    # Copy default tmux config if not present
+    if [[ ! -f "$wiggum_dir/tmux.conf" ]] && [[ -f "$WIGGUM_DEFAULTS/tmux.conf" ]]; then
+        cp "$WIGGUM_DEFAULTS/tmux.conf" "$wiggum_dir/tmux.conf"
+        success "Created tmux.conf"
+    fi
+
     # Copy default prompts if not present
     for prompt in supervisor.md worker.md reviewer.md qa.md; do
         if [[ ! -f "$wiggum_dir/prompts/$prompt" ]] && [[ -f "$WIGGUM_DEFAULTS/prompts/$prompt" ]]; then

@@ -203,6 +203,11 @@ cmd_spawn() {
         info "Creating tmux session: $WIGGUM_SESSION"
         tmux new-session -d -s "$WIGGUM_SESSION" -n "main"
         new_session=true
+
+        # Source wiggum tmux config
+        local tmux_conf="$MAIN_WIGGUM_DIR/tmux.conf"
+        [[ ! -f "$tmux_conf" ]] && tmux_conf="$WIGGUM_DEFAULTS/tmux.conf"
+        [[ -f "$tmux_conf" ]] && tmux source-file "$tmux_conf" 2>/dev/null
     fi
 
     # Supervisor doesn't need a ticket
@@ -261,8 +266,10 @@ cmd_spawn() {
         new_pane=$(tmux display-message -t "$WIGGUM_SESSION:main" -p '#{pane_index}')
     fi
 
-    # Set pane title
-    tmux select-pane -t "$WIGGUM_SESSION:main.$new_pane" -T "$pane_name"
+    # Set pane title (include ticket if assigned)
+    local pane_title="$pane_name"
+    [[ -n "$ticket_id" ]] && pane_title="$pane_name:$ticket_id"
+    tmux select-pane -t "$WIGGUM_SESSION:main.$new_pane" -T "$pane_title"
 
     # Change to worktree directory
     tmux send-keys -t "$WIGGUM_SESSION:main.$new_pane" "cd '$worktree_path'" Enter

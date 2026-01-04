@@ -60,7 +60,7 @@ test_init_idempotent() {
 test_init_from_subdirectory() {
     # Init from subdirectory should create .ralphs at git root
     mkdir -p src/deep/nested
-    cd src/deep/nested
+    cd src/deep/nested || exit 1
     "$RALPHS_BIN" init --no-session
     # .ralphs should be at git root, not in subdirectory
     assert_dir_exists "../../../.ralphs" "Init from subdir should create .ralphs at git root"
@@ -70,7 +70,7 @@ test_init_from_subdirectory() {
 test_init_from_tickets_clone() {
     # Init from inside .ralphs/tickets should use existing project
     "$RALPHS_BIN" init --no-session
-    cd .ralphs/tickets
+    cd .ralphs/tickets || exit 1
     "$RALPHS_BIN" init --no-session
     # Should not create nested .ralphs
     assert_not_exists ".ralphs" "Init from tickets clone should NOT create nested .ralphs"
@@ -80,7 +80,7 @@ test_commands_from_subdirectory() {
     # Commands should work from subdirectories
     "$RALPHS_BIN" init --no-session
     mkdir -p src/deep
-    cd src/deep
+    cd src/deep || exit 1
     local id
     id=$("$RALPHS_BIN" ticket create "From subdir")
     # Ticket should be created at project root

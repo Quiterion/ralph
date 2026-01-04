@@ -4,7 +4,8 @@
 #
 
 # SC2034: Test arrays are used by main test runner via source
-# shellcheck disable=SC2034
+# SC2064: We intentionally expand variables at trap definition time
+# shellcheck disable=SC2034,SC2064
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=framework.sh

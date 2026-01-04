@@ -84,6 +84,7 @@ run_test() {
     else
         echo -e "${RED}FAIL${NC}"
         echo -e "${YELLOW}    Output:${NC}"
+        # shellcheck disable=SC2001
         echo "$output" | sed 's/^/    /'
         TESTS_FAILED=$((TESTS_FAILED + 1))
     fi

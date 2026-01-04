@@ -6,7 +6,7 @@
 #
 
 # Valid states and transitions
-VALID_STATES=("ready" "claimed" "implement" "review" "qa" "done")
+VALID_STATES=("ready" "in-progress" "review" "qa" "done")
 
 #
 # Ticket I/O abstraction layer
@@ -103,11 +103,10 @@ get_ticket_deps() {
 
 # State transition rules: from -> allowed targets
 declare -A TRANSITIONS=(
-    ["ready"]="claimed"
-    ["claimed"]="implement"
-    ["implement"]="review"
-    ["review"]="qa implement"
-    ["qa"]="done implement"
+    ["ready"]="in-progress"
+    ["in-progress"]="review"
+    ["review"]="qa in-progress"
+    ["qa"]="done in-progress"
 )
 
 # Ticket subcommand router
@@ -514,15 +513,15 @@ ticket_claim() {
         exit "$EXIT_INVALID_TRANSITION"
     fi
 
-    set_frontmatter_value "$ticket_path" "state" "claimed"
+    set_frontmatter_value "$ticket_path" "state" "in-progress"
     set_frontmatter_value "$ticket_path" "assigned_at" "$(timestamp)"
 
     # Sync after write operation
-    ticket_sync_push "Claim ticket: $id" 2>/dev/null || true
+    ticket_sync_push "Start ticket: $id" 2>/dev/null || true
 
     run_hook "on-claim" "$id"
 
-    success "Claimed $id"
+    success "Started $id"
 }
 
 # Transition ticket state
@@ -597,7 +596,7 @@ ticket_transition() {
         qa)
             hook_name="on-review-done"
             ;;
-        implement)
+        in-progress)
             if [[ "$current_state" == "review" ]]; then
                 hook_name="on-review-rejected"
             elif [[ "$current_state" == "qa" ]]; then

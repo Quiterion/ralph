@@ -2,7 +2,7 @@
 
 ralphs includes an integrated ticket system based on [wedow/ticket](https://github.com/wedow/ticket). Tickets are git-backed markdown files with YAML frontmatter.
 
-Tickets are stored in a bare git repository (`.ralphs/tickets.git`) and cloned to each worktree for multi-agent synchronization. See [distributed-tickets.md](./distributed-tickets.md) for details.
+Tickets are stored in a bare git repository (`.ralphs/tickets.git`) and cloned to each worktree for multi-agent synchronization. See [Sync & Distribution](#sync--distribution) below.
 
 ---
 
@@ -13,7 +13,7 @@ Rather than bolting ticket management onto ralphs, we subsume it:
 - **Single mental model** — `.ralphs/` is the whole system
 - **Unified state machine** — One `state` field, not `status` vs `stage`
 - **First-class hooks** — State transitions naturally trigger hooks
-- **Cleaner implementation** — No impedance mismatch
+- **Cleaner in-progressation** — No impedance mismatch
 
 The underlying `tk` CLI is vendored and available, but users interact via `ralphs ticket` commands.
 
@@ -22,21 +22,17 @@ The underlying `tk` CLI is vendored and available, but users interact via `ralph
 ## State Machine
 
 ```
-         ┌─────────────────────────────────────────┐
-         │                                         │
-         ▼                                         │
-┌───────────┐    ┌─────────┐    ┌──────────┐    ┌──────────┐    ┌────────┐
-│   ready   │───▶│ claimed │───▶│implement │───▶│  review  │───▶│   qa   │
-└───────────┘    └─────────┘    └──────────┘    └──────────┘    └────────┘
-                                     ▲               │              │
-                                     │               │              │
-                                     └───────────────┴──────────────┘
-                                            (feedback)
-                                                                    │
-                                                                    ▼
-                                                               ┌────────┐
-                                                               │  done  │
-                                                               └────────┘
+┌─────────────┐    ┌─────────────┐    ┌──────────┐    ┌────────┐
+│    ready    │───▶│ in-progress │───▶│  review  │───▶│   qa   │
+└─────────────┘    └─────────────┘    └──────────┘    └────────┘
+                          ▲               │              │
+                          │               │              │
+                          └───────────────┴──────────────┘
+                                 (feedback)              │
+                                                         ▼
+                                                    ┌────────┐
+                                                    │  done  │
+                                                    └────────┘
 ```
 
 ### States
@@ -44,8 +40,7 @@ The underlying `tk` CLI is vendored and available, but users interact via `ralph
 | State | Description | Typical Actor |
 |-------|-------------|---------------|
 | `ready` | Dependencies met, available for work | — |
-| `claimed` | Worker has picked up ticket | Worker |
-| `implement` | Active implementation | Worker |
+| `in-progress` | Worker is actively working on ticket | Worker |
 | `review` | Code review in progress | Reviewer agent |
 | `qa` | Quality assurance/testing | QA agent |
 | `done` | Completed, all validation passed | — |
@@ -54,13 +49,12 @@ The underlying `tk` CLI is vendored and available, but users interact via `ralph
 
 | From | To | Trigger | Hook |
 |------|----|---------|------|
-| `ready` | `claimed` | Worker claims ticket | `on-claim` |
-| `claimed` | `implement` | Worker starts work | — |
-| `implement` | `review` | Worker marks done | `on-implement-done` |
+| `ready` | `in-progress` | Worker assigned to ticket | `on-claim` |
+| `in-progress` | `review` | Worker marks done | `on-implement-done` |
 | `review` | `qa` | Reviewer approves | `on-review-done` |
-| `review` | `implement` | Reviewer rejects | `on-review-rejected` |
+| `review` | `in-progress` | Reviewer rejects | `on-review-rejected` |
 | `qa` | `done` | QA passes | `on-qa-done` → `on-close` |
-| `qa` | `implement` | QA fails | `on-qa-rejected` |
+| `qa` | `in-progress` | QA fails | `on-qa-rejected` |
 
 ---
 
@@ -74,10 +68,10 @@ type: feature        # feature | bug | task | epic | chore
 priority: 1          # 0 (highest) to 4 (lowest)
 
 # State (unified)
-state: implement
+state: in-progress
 
 # Assignment
-assigned_pane: impl-0
+assigned_pane: worker-0
 assigned_at: 2025-07-14T10:30:00Z
 
 # Dependencies
@@ -153,11 +147,11 @@ When review or QA fails, feedback is appended to the ticket:
 - Add test for expired token case
 ```
 
-The ticket state returns to `implement`, and the assigned worker is pinged:
+The ticket state returns to `in-progress`, and the assigned worker is pinged:
 
 ```bash
 # Happens automatically via hook
-tmux send-keys -t impl-0 "# Review feedback added. Please address and re-submit." Enter
+tmux send-keys -t worker-0 "# Review feedback added. Please address and re-submit." Enter
 ```
 
 The worker's next loop reads the ticket, sees feedback, addresses it.
@@ -180,7 +174,7 @@ ralphs ticket show <id>         # Full ticket details
 ralphs ticket tree <id>         # Dependency tree
 
 # State transitions
-ralphs ticket claim <id>        # Mark claimed (usually by worker)
+ralphs ticket claim <id>        # Mark in-progress (usually by worker)
 ralphs ticket transition <id> <state>   # Explicit state change
 
 # Edit
@@ -206,3 +200,65 @@ Tickets are markdown with YAML frontmatter. This enables:
 - **Git tracking** — Full history, diffs, blame
 - **Agent accessibility** — Easy to parse and update
 - **IDE integration** — Click ticket IDs in commit messages to jump to files
+
+---
+
+## Sync & Distribution
+
+Tickets are stored in a separate git repository for multi-agent synchronization.
+
+### Architecture
+
+```
+.ralphs/
+├── tickets.git/          ← bare repo (origin)
+│   └── hooks/            ← pre-receive, post-receive
+└── tickets/              ← clone (for CLI access)
+
+worktrees/
+├── worker-0/.ralphs/tickets/    ← clone
+└── reviewer-0/.ralphs/tickets/  ← clone
+```
+
+All agents (including supervisor) have their own clone. They push/pull to the bare repo.
+
+### Push Flow
+
+```
+agent edits ticket → commits → pushes
+                                 ↓
+                         pre-receive validates state transition
+                                 ↓
+                         post-receive triggers hooks (spawn reviewer, etc.)
+```
+
+### Auto-Sync
+
+Ticket commands auto-sync by default:
+- **Read ops** (`show`, `list`, `ready`) — pull first
+- **Write ops** (`create`, `transition`, `feedback`) — pull, act, push
+
+Disable with `RALPHS_AUTO_SYNC=false` or `--no-sync` flag.
+
+### Manual Sync
+
+```bash
+ralphs ticket sync              # Pull + push
+ralphs ticket sync --pull       # Pull only
+ralphs ticket sync --push       # Push only
+```
+
+### Conflict Resolution
+
+Most conflicts auto-resolve via rebase (agents edit different tickets). If rebase fails:
+1. Worker sees warning: "Ticket sync conflict"
+2. Resolve manually: `git -C .ralphs/tickets rebase --continue`
+
+The bare repo uses `*.md merge=union` to append conflicting additions.
+
+### Concurrent Transitions
+
+If two agents try to transition the same ticket:
+1. First push succeeds, hooks fire
+2. Second push rejected by pre-receive (state already changed)
+3. Second agent pulls, sees new state, adjusts

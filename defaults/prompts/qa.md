@@ -55,7 +55,7 @@ Something is wrong. Be specific about what failed:
 # Add specific feedback about failures
 ralphs ticket feedback {TICKET_ID} qa "Your feedback here"
 
-# Return to implementer
+# Return to worker
 ralphs ticket transition {TICKET_ID} implement
 ```
 

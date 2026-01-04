@@ -41,7 +41,7 @@ The supervisor's context stays clean. The "grunt work" of reading trajectories a
 | Long-running work | Quick summarization |
 | Human oversight needed | Fire-and-forget |
 | Produces artifacts | Returns insight |
-| Workers, reviewers, QA | Tool implementations |
+| Workers, reviewers, QA | Tool in-progressations |
 
 The distinction: if work is substantial enough to warrant observation and potential intervention, it gets a pane. If it's a quick internal operation, it stays ephemeral.
 
@@ -65,17 +65,17 @@ ralphs fetch <pane-id> [prompt]
 
 ```bash
 # General progress summary
-ralphs fetch impl-0
+ralphs fetch worker-0
 # → "Implemented auth middleware in src/middleware/auth.ts.
 #    Added 3 test cases, all passing. Ready for review."
 
 # Focused query
-ralphs fetch impl-0 "any blockers or concerns?"
+ralphs fetch worker-0 "any blockers or concerns?"
 # → "No blockers. Minor concern: rate limiting not yet addressed,
 #    noted in ticket for review phase."
 
 # Specific check
-ralphs fetch impl-0 "is the test coverage adequate?"
+ralphs fetch worker-0 "is the test coverage adequate?"
 # → "Coverage looks thin. Only happy path tested. Missing:
 #    expired token, malformed token, missing token cases."
 ```
@@ -127,12 +127,12 @@ ralphs context tk-5c46 "what specs are relevant?"
 
 ---
 
-### ralphs inject-feedback
+### ralphs ticket feedback
 
 Append feedback to a ticket and notify the worker.
 
 ```bash
-ralphs inject-feedback <ticket-id> <source> <message>
+ralphs ticket feedback <ticket-id> <source> <message>
 ```
 
 **Arguments:**
@@ -143,7 +143,7 @@ ralphs inject-feedback <ticket-id> <source> <message>
 **Example:**
 
 ```bash
-ralphs inject-feedback tk-5c46 reviewer "Missing rate limiting. Add test for expired tokens."
+ralphs ticket feedback tk-5c46 reviewer "Missing rate limiting. Add test for expired tokens."
 ```
 
 **Effect:**
@@ -155,7 +155,7 @@ ralphs inject-feedback tk-5c46 reviewer "Missing rate limiting. Add test for exp
    ```
 2. If ticket has an assigned pane, pings it:
    ```bash
-   tmux send-keys -t impl-0 "# Feedback added to your ticket. Please address." Enter
+   tmux send-keys -t worker-0 "# Feedback added to your ticket. Please address." Enter
    ```
 
 ---
@@ -174,16 +174,16 @@ ralphs digest [prompt]
 # Overall status
 ralphs digest
 # → "3 workers active:
-#    - impl-0 (tk-5c46): Auth middleware, nearly done
-#    - impl-1 (tk-8a2b): Rate limiting, blocked on auth
-#    - review-0 (tk-3a1b): Reviewing DB schema, minor issues found
+#    - worker-0 (tk-5c46): Auth middleware, nearly done
+#    - worker-1 (tk-8a2b): Rate limiting, blocked on auth
+#    - reviewer-0 (tk-3a1b): Reviewing DB schema, minor issues found
 #
 #    2 tickets ready to claim. No critical blockers."
 
 # Specific question
 ralphs digest "what's blocking progress?"
 # → "Main blocker: tk-8a2b waiting on tk-5c46 (auth).
-#    impl-0 is close to done, should unblock within the hour."
+#    worker-0 is close to done, should unblock within the hour."
 ```
 
 ---

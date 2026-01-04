@@ -33,8 +33,13 @@ ralphs init [--session NAME] [--config PATH]
 - `--config PATH` — Path to config file (default: `.ralphs/config.sh`)
 
 **Effects:**
-- Creates `.ralphs/` directory structure at the git repository root
-- Starts tmux session
+- Creates `.ralphs/` directory structure at the git repository root:
+  - `.ralphs/config.sh` — configuration
+  - `.ralphs/tickets.git/` — bare git repo for tickets (with pre-receive/post-receive hooks)
+  - `.ralphs/tickets/` — clone for CLI access
+  - `.ralphs/hooks/` — state transition hooks (copied from defaults)
+  - `.ralphs/prompts/` — agent prompt templates (copied from defaults)
+- Starts tmux session with initial window
 - Sources configuration
 
 **Note:** Can be run from any subdirectory within the git repository. If already in a ralphs project, uses the existing project.
@@ -66,17 +71,21 @@ ralphs teardown [--force]
 
 ## Pane Management
 
+**Pane identifiers:** Commands that take `<pane-id>` accept either the pane name (e.g., `worker-0`) or the tmux pane index (e.g., `1`). Pane names are preferred as they're stable across layout changes.
+
 ### ralphs spawn
 
 Spawn an agent in a new pane.
 
 ```bash
-ralphs spawn <role> <ticket-id> [--prompt PATH]
+ralphs spawn <role> [ticket-id] [--prompt PATH]
 ```
 
 **Arguments:**
-- `role` — Agent role: `supervisor`, `impl`, `reviewer`, `qa`
+- `role` — Agent role name, matches prompt file (e.g., `supervisor`, `worker`, `reviewer`, `qa`)
 - `ticket-id` — Ticket to assign (not needed for supervisor)
+
+The role name directly corresponds to the prompt template file: `ralphs spawn foo` loads `.ralphs/prompts/foo.md`.
 
 **Flags:**
 - `--prompt PATH` — Override default prompt for this role
@@ -85,7 +94,7 @@ ralphs spawn <role> <ticket-id> [--prompt PATH]
 
 ```bash
 ralphs spawn supervisor
-ralphs spawn impl tk-5c46
+ralphs spawn worker tk-5c46
 ralphs spawn reviewer tk-5c46 --prompt .ralphs/prompts/security-review.md
 ```
 
@@ -107,9 +116,9 @@ ralphs list [--format FORMAT]
 ```
 PANE       ROLE        TICKET     STATE        UPTIME
 0          supervisor  -          running      2h 15m
-1          impl-0      tk-5c46    running      1h 30m
-2          impl-1      tk-8a2b    running      45m
-3          review-0    tk-3a1b    running      10m
+1          worker-0    tk-5c46    running      1h 30m
+2          worker-1    tk-8a2b    running      45m
+3          reviewer-0    tk-3a1b    running      10m
 ```
 
 ---
@@ -140,7 +149,7 @@ Sends the message as input to the pane, waking the agent.
 **Example:**
 
 ```bash
-ralphs ping impl-0 "Review feedback added to your ticket. Please address."
+ralphs ping worker-0 "Review feedback added to your ticket. Please address."
 ```
 
 ---
@@ -161,13 +170,13 @@ ralphs status [--verbose]
 SESSION: ralphs-myproject (4 panes)
 
 WORKERS:
-  impl-0      tk-5c46    implement    1h 30m
-  impl-1      tk-8a2b    implement    45m
-  review-0    tk-3a1b    review       10m
+  worker-0    tk-5c46    in-progress    1h 30m
+  worker-1    tk-8a2b    in-progress    45m
+  reviewer-0    tk-3a1b    review       10m
 
 TICKETS:
   ready:      2
-  implement:  2
+  in-progress:  2
   review:     1
   qa:         0
   done:       5
@@ -194,6 +203,18 @@ Summarize the whole hive.
 
 ```bash
 ralphs digest [prompt]
+```
+
+See [tools.md](./tools.md) for details.
+
+---
+
+### ralphs context
+
+Build a briefing for a ticket.
+
+```bash
+ralphs context <ticket-id> [prompt]
 ```
 
 See [tools.md](./tools.md) for details.
@@ -269,6 +290,42 @@ ralphs ticket sync --push       # Push only
 
 ---
 
+## Hook Subcommands
+
+### ralphs hook run
+
+Run a hook manually.
+
+```bash
+ralphs hook run <hook-name> <ticket-id>
+```
+
+**Arguments:**
+- `hook-name` — Name of the hook (e.g., `on-implement-done`, `on-review-rejected`)
+- `ticket-id` — Ticket to pass to the hook
+
+**Example:**
+
+```bash
+ralphs hook run on-implement-done tk-5c46
+```
+
+Useful for testing hooks or manual intervention.
+
+---
+
+### ralphs hook list
+
+List available hooks.
+
+```bash
+ralphs hook list
+```
+
+Shows project hooks (`.ralphs/hooks/`) and default hooks, with active/inactive status.
+
+---
+
 ## Global Flags
 
 These work with any command:
@@ -287,14 +344,16 @@ These work with any command:
 
 These can be set in `.ralphs/config.sh` or exported:
 
-```bash
-RALPHS_SESSION        # tmux session name
-RALPHS_MAX_WORKERS    # Max concurrent worker panes
-RALPHS_POLL_INTERVAL  # Supervisor poll interval (seconds)
-RALPHS_AGENT_CMD      # Inner harness command (claude, amp, etc.)
-RALPHS_LAYOUT         # tmux pane layout
-RALPHS_EDITOR         # Editor for ticket edit (default: $EDITOR)
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RALPHS_SESSION` | tmux session name | `ralphs-<dirname>` |
+| `RALPHS_MAX_WORKERS` | Max concurrent worker panes | `4` |
+| `RALPHS_POLL_INTERVAL` | Supervisor poll interval (seconds) | `10` |
+| `RALPHS_AGENT_CMD` | Inner harness command | `claude` |
+| `RALPHS_LAYOUT` | tmux pane layout | `tiled` |
+| `RALPHS_EDITOR` | Editor for ticket edit | `$EDITOR` |
+| `RALPHS_AUTO_SYNC` | Auto-sync tickets on read/write | `true` |
+| `RALPHS_EDITOR_MODE` | Input mode for agents (`normal`, `vim`) | `normal` |
 
 ---
 

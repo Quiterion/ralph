@@ -106,8 +106,8 @@ test_ticket_list_filter_by_state() {
     output=$("$RALPHS_BIN" ticket list --state ready)
     assert_contains "$output" "Ready ticket" "Should show ready ticket"
 
-    output=$("$RALPHS_BIN" ticket list --state claimed)
-    # Should not contain the ticket since it's not claimed
+    output=$("$RALPHS_BIN" ticket list --state in-progress)
+    # Should not contain the ticket since it's not in-progress
     if [[ "$output" == *"Ready ticket"* ]]; then
         echo "Should not show ticket in different state"
         return 1
@@ -179,7 +179,7 @@ test_ticket_claim() {
 
     local content
     content=$(cat ".ralphs/tickets/${ticket_id}.md")
-    assert_contains "$content" "state: claimed" "Ticket should be claimed"
+    assert_contains "$content" "state: in-progress" "Ticket should be in-progress"
 }
 
 test_ticket_claim_sets_timestamp() {
@@ -194,7 +194,7 @@ test_ticket_claim_sets_timestamp() {
     assert_contains "$content" "assigned_at:" "Should set assigned_at"
 }
 
-test_ticket_claim_already_claimed() {
+test_ticket_claim_already_in-progress() {
     "$RALPHS_BIN" init --no-session
     local ticket_id
     ticket_id=$("$RALPHS_BIN" ticket create "Double claim")
@@ -202,7 +202,7 @@ test_ticket_claim_already_claimed() {
     "$RALPHS_BIN" ticket claim "$ticket_id"
 
     if "$RALPHS_BIN" ticket claim "$ticket_id" 2>/dev/null; then
-        echo "Should fail to claim already claimed ticket"
+        echo "Should fail to claim already in-progress ticket"
         return 1
     fi
 }
@@ -217,11 +217,11 @@ test_ticket_transition_valid() {
     ticket_id=$("$RALPHS_BIN" ticket create "Transition me")
 
     "$RALPHS_BIN" ticket claim "$ticket_id"
-    "$RALPHS_BIN" ticket transition "$ticket_id" implement
+    "$RALPHS_BIN" ticket transition "$ticket_id" in-progress
 
     local content
     content=$(cat ".ralphs/tickets/${ticket_id}.md")
-    assert_contains "$content" "state: implement" "Should be in implement state"
+    assert_contains "$content" "state: in-progress" "Should be in in-progress state"
 }
 
 test_ticket_transition_full_workflow() {
@@ -230,7 +230,7 @@ test_ticket_transition_full_workflow() {
     ticket_id=$("$RALPHS_BIN" ticket create "Full workflow")
 
     "$RALPHS_BIN" ticket claim "$ticket_id"
-    "$RALPHS_BIN" ticket transition "$ticket_id" implement --no-hooks
+    "$RALPHS_BIN" ticket transition "$ticket_id" in-progress --no-hooks
     "$RALPHS_BIN" ticket transition "$ticket_id" review --no-hooks
     "$RALPHS_BIN" ticket transition "$ticket_id" qa --no-hooks
     "$RALPHS_BIN" ticket transition "$ticket_id" "done" --no-hooks
@@ -258,13 +258,13 @@ test_ticket_transition_review_rejection() {
     ticket_id=$("$RALPHS_BIN" ticket create "Rejected")
 
     "$RALPHS_BIN" ticket claim "$ticket_id"
-    "$RALPHS_BIN" ticket transition "$ticket_id" implement --no-hooks
+    "$RALPHS_BIN" ticket transition "$ticket_id" in-progress --no-hooks
     "$RALPHS_BIN" ticket transition "$ticket_id" review --no-hooks
-    "$RALPHS_BIN" ticket transition "$ticket_id" implement --no-hooks  # Rejected!
+    "$RALPHS_BIN" ticket transition "$ticket_id" in-progress --no-hooks  # Rejected!
 
     local content
     content=$(cat ".ralphs/tickets/${ticket_id}.md")
-    assert_contains "$content" "state: implement" "Should allow review rejection"
+    assert_contains "$content" "state: in-progress" "Should allow review rejection"
 }
 
 #
@@ -436,7 +436,7 @@ TICKET_TESTS=(
     # Claim
     "Ticket claim:test_ticket_claim"
     "Ticket claim sets timestamp:test_ticket_claim_sets_timestamp"
-    "Ticket claim already claimed:test_ticket_claim_already_claimed"
+    "Ticket claim already in-progress:test_ticket_claim_already_in-progress"
 
     # Transition
     "Ticket transition valid:test_ticket_transition_valid"

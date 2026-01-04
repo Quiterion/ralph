@@ -32,7 +32,7 @@ orchestrate workers, not to write code yourself.
 
 - `ralphs ticket ready` — see tickets available for work
 - `ralphs ticket blocked` — see blocked tickets
-- `ralphs spawn impl <ticket>` — assign a worker to a ticket
+- `ralphs spawn worker <ticket>` — assign a worker to a ticket
 - `ralphs fetch <pane> <prompt>` — get summarized worker progress
 - `ralphs digest <prompt>` — get overall hive status
 - `ralphs ping <pane> <message>` — send message to worker
@@ -48,7 +48,7 @@ orchestrate workers, not to write code yourself.
 
 - Write code directly
 - Read raw worker output (use `ralphs fetch` instead)
-- Micromanage implementation details
+- Micromanage in-progressation details
 
 ## Loop Structure
 
@@ -67,14 +67,14 @@ while true:
 
 ---
 
-### implementer.md
+### worker.md
 
 The worker. Implements features and fixes bugs.
 
 ```markdown
-# Implementer
+# Worker
 
-You are an implementation agent. You have one job: complete the ticket
+You are a worker agent. You have one job: complete the ticket
 assigned to you.
 
 ## Your Ticket
@@ -93,7 +93,7 @@ assigned to you.
 ## Working Style
 
 - Focus only on your ticket — ignore other work
-- Search before implementing (don't assume code doesn't exist)
+- Search before in-progressing (don't assume code doesn't exist)
 - Run tests after changes
 - If blocked, note it in your ticket
 - If you receive feedback, address it and re-submit
@@ -117,12 +117,12 @@ This will trigger a reviewer to examine your changes.
 
 ### reviewer.md
 
-The critic. Reviews implementation for quality and correctness.
+The critic. Reviews in-progressation for quality and correctness.
 
 ```markdown
 # Reviewer
 
-You are a code review agent. Your job is to review the implementation
+You are a code review agent. Your job is to review the in-progressation
 for a ticket and provide feedback.
 
 ## Your Ticket
@@ -131,7 +131,7 @@ for a ticket and provide feedback.
 
 ## What to Review
 
-1. **Correctness** — Does the implementation meet the ticket requirements?
+1. **Correctness** — Does the in-progressation meet the ticket requirements?
 2. **Tests** — Are there adequate tests? Do they cover edge cases?
 3. **Code quality** — Is the code readable, maintainable?
 4. **Security** — Any obvious security issues?
@@ -157,7 +157,7 @@ Add specific, actionable feedback:
 
 ```bash
 ralphs ticket feedback {TICKET_ID} reviewer "Your feedback here"
-ralphs ticket transition {TICKET_ID} implement
+ralphs ticket transition {TICKET_ID} in-progress
 ```
 
 Be specific. "Needs improvement" is not helpful.
@@ -212,7 +212,7 @@ Add specific feedback about what failed:
 
 ```bash
 ralphs ticket feedback {TICKET_ID} qa "Your feedback here"
-ralphs ticket transition {TICKET_ID} implement
+ralphs ticket transition {TICKET_ID} in-progress
 ```
 
 ## Project Context
@@ -244,7 +244,7 @@ You can create additional prompts for specialized roles:
 ```
 .ralphs/prompts/
 ├── supervisor.md
-├── implementer.md
+├── worker.md
 ├── reviewer.md
 ├── qa.md
 ├── security-reviewer.md    # Custom: security-focused review

@@ -14,7 +14,7 @@ This document enumerates test cases for the fixes in commit e5afc88.
 | ID | Description | Input | Expected |
 |----|-------------|-------|----------|
 | 1.1 | Empty registry | `[]` | Empty table, no errors |
-| 1.2 | Single pane | `[{"pane": "impl-0", "role": "impl", "ticket": "tk-1234", "started_at": "..."}]` | One row displayed |
+| 1.2 | Single pane | `[{"pane": "worker-0", "role": "worker", "ticket": "tk-1234", "started_at": "..."}]` | One row displayed |
 | 1.3 | Multiple panes | Array with 3+ entries | All rows displayed |
 | 1.4 | Missing optional fields | Entry with empty `ticket` | Shows "—" for ticket |
 | 1.5 | Malformed JSON | `[{broken` | Graceful error or warning |
@@ -27,7 +27,7 @@ This document enumerates test cases for the fixes in commit e5afc88.
 
 ### Covered Functionality
 - Returns next available index for a role (0, 1, 2...)
-- Used to generate unique pane names like `impl-0`, `impl-1`
+- Used to generate unique pane names like `worker-0`, `worker-1`
 
 ### Test Cases
 
@@ -54,7 +54,7 @@ This document enumerates test cases for the fixes in commit e5afc88.
 | ID | Description | Input | Expected |
 |----|-------------|-------|----------|
 | 3.1 | Supervisor role | `role=supervisor` | Loads `supervisor.md`, substitutes `{PROJECT_SPECS}` |
-| 3.2 | Implementer role | `role=impl` | Maps to `implementer.md` |
+| 3.2 | Implementer role | `role=worker` | Maps to `worker.md` |
 | 3.3 | Reviewer role | `role=review` | Maps to `reviewer.md` |
 | 3.4 | With ticket | `ticket_id=tk-1234` | Reads ticket, substitutes `{TICKET_CONTENT}` |
 | 3.5 | Without ticket | `ticket_id=""` | No ticket substitution |
@@ -102,8 +102,8 @@ This document enumerates test cases for the fixes in commit e5afc88.
 | ID | Description | CWD | Expected |
 |----|-------------|-----|----------|
 | 5.1 | Main project | `/proj` | `MAIN_PROJECT_ROOT=/proj` |
-| 5.2 | Worktree | `/proj/worktrees/impl-0` | `MAIN_PROJECT_ROOT=/proj` |
-| 5.3 | Nested worktree path | `/proj/worktrees/impl-0/src` | `MAIN_PROJECT_ROOT=/proj` |
+| 5.2 | Worktree | `/proj/worktrees/worker-0` | `MAIN_PROJECT_ROOT=/proj` |
+| 5.3 | Nested worktree path | `/proj/worktrees/worker-0/src` | `MAIN_PROJECT_ROOT=/proj` |
 | 5.4 | Session from worktree | In worktree | Session = `ralphs-<proj-basename>` |
 | 5.5 | Config from worktree | In worktree | Loads `/proj/.ralphs/config.sh` |
 | 5.6 | Panes.json from worktree | `ralphs list` in worktree | Reads `/proj/.ralphs/panes.json` |

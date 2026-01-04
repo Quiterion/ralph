@@ -109,20 +109,13 @@ build_agent_prompt() {
     local ticket_id="${2:-}"
     local worktree_path="$3"
 
-    # Map role names to prompt files
-    local prompt_file="$role"
-    case "$role" in
-        impl) prompt_file="implementer" ;;
-        review) prompt_file="reviewer" ;;
-    esac
-
-    # Find the prompt template
+    # Find the prompt template (role name == prompt file name)
     local template=""
-    local prompt_path="$PROMPTS_DIR/${prompt_file}.md"
+    local prompt_path="$PROMPTS_DIR/${role}.md"
     if [[ -f "$prompt_path" ]]; then
         template=$(cat "$prompt_path")
-    elif [[ -f "$RALPHS_DEFAULTS/prompts/${prompt_file}.md" ]]; then
-        template=$(cat "$RALPHS_DEFAULTS/prompts/${prompt_file}.md")
+    elif [[ -f "$RALPHS_DEFAULTS/prompts/${role}.md" ]]; then
+        template=$(cat "$RALPHS_DEFAULTS/prompts/${role}.md")
     else
         # No template found, return minimal prompt
         if [[ -n "$ticket_id" ]]; then
@@ -273,12 +266,12 @@ cmd_spawn() {
     # Register the pane
     register_pane "$pane_name" "$role" "$ticket_id"
 
-    # Update ticket state if claiming
-    if [[ -n "$ticket_id" ]] && [[ "$role" == "impl" || "$role" == "implementer" ]]; then
+    # Start work on ticket if it's ready (assigning a ticket to any agent starts it)
+    if [[ -n "$ticket_id" ]]; then
         local current_state
-    current_state=$(get_frontmatter_value "$TICKETS_DIR/${ticket_id}.md" "state")
+        current_state=$(get_frontmatter_value "$TICKETS_DIR/${ticket_id}.md" "state")
         if [[ "$current_state" == "ready" ]]; then
-            set_frontmatter_value "$TICKETS_DIR/${ticket_id}.md" "state" "claimed"
+            set_frontmatter_value "$TICKETS_DIR/${ticket_id}.md" "state" "in-progress"
             set_frontmatter_value "$TICKETS_DIR/${ticket_id}.md" "assigned_pane" "$pane_name"
             set_frontmatter_value "$TICKETS_DIR/${ticket_id}.md" "assigned_at" "$(timestamp)"
             run_hook "on-claim" "$ticket_id"

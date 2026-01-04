@@ -1,6 +1,6 @@
 # Hooks
 
-Hooks are shell scripts triggered by ticket state transitions. They encode the pipeline logic—when implementation finishes, spawn a reviewer; when review passes, spawn QA; etc.
+Hooks are shell scripts triggered by ticket state transitions. They encode the pipeline logic—when in-progressation finishes, spawn a reviewer; when review passes, spawn QA; etc.
 
 Hooks are **git-style**, not agent-specific. This keeps ralphs agent-agnostic: any inner harness that can read/write files works.
 
@@ -21,18 +21,27 @@ Hooks live in `.ralphs/hooks/`:
 └── on-close
 ```
 
+**Note:** There are two hook systems in ralphs:
+
+1. **State transition hooks** (this document) — `.ralphs/hooks/` — your pipeline logic
+2. **Git hooks** — `.ralphs/tickets.git/hooks/` — internal plumbing
+
+The git hooks (`pre-receive`, `post-receive`) in the bare ticket repo handle validation and trigger the state transition hooks automatically. You typically only write state transition hooks; the git hooks are installed by `ralphs init`.
+
+See [tickets.md](./tickets.md#sync--distribution) for details on the git hook internals.
+
 ---
 
 ## Hook Reference
 
 | Hook | Trigger | Typical Use |
 |------|---------|-------------|
-| `on-claim` | Ticket claimed by worker | Log, notify, setup |
-| `on-implement-done` | Worker finishes implementation | Spawn reviewer |
+| `on-claim` | Ticket in-progress by worker | Log, notify, setup |
+| `on-implement-done` | Worker finishes in-progressation | Spawn reviewer |
 | `on-review-done` | Reviewer approves | Spawn QA agent |
-| `on-review-rejected` | Reviewer rejects | Inject feedback, ping implementer |
+| `on-review-rejected` | Reviewer rejects | Inject feedback, ping worker |
 | `on-qa-done` | QA passes | Close ticket |
-| `on-qa-rejected` | QA fails | Inject feedback, reopen for implementer |
+| `on-qa-rejected` | QA fails | Inject feedback, reopen for worker |
 | `on-close` | Ticket closed | Cleanup, metrics, maybe tag release |
 
 ---
@@ -64,7 +73,7 @@ RALPHS_SESSION       # tmux session name
 
 ### on-implement-done
 
-Spawn a review agent when implementation completes:
+Spawn a review agent when in-progressation completes:
 
 ```bash
 #!/bin/bash
@@ -78,7 +87,7 @@ ralphs spawn reviewer "$TICKET_ID"
 
 ### on-review-rejected
 
-Inject feedback and ping the implementer:
+Inject feedback and ping the worker:
 
 ```bash
 #!/bin/bash
@@ -89,10 +98,10 @@ IMPL_PANE="$RALPHS_PANE"
 
 echo "[hook] Review rejected for $TICKET_ID"
 
-# Transition back to implement
-ralphs ticket transition "$TICKET_ID" implement
+# Transition back to in-progress
+ralphs ticket transition "$TICKET_ID" in-progress
 
-# Ping the original implementer (if still running)
+# Ping the original worker (if still running)
 if [[ -n "$IMPL_PANE" ]]; then
   ralphs ping "$IMPL_PANE" "Review feedback added to your ticket. Please address."
 fi
@@ -114,7 +123,7 @@ echo "[hook] QA passed for $TICKET_ID"
 ralphs ticket transition "$TICKET_ID" done
 
 # Check if all tickets are done, maybe tag release
-if [[ -z "$(ralphs ticket list --state implement,review,qa)" ]]; then
+if [[ -z "$(ralphs ticket list --state in-progress,review,qa)" ]]; then
   echo "[hook] All tickets complete, tagging release"
   # Increment patch version
   LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
@@ -185,10 +194,10 @@ This means:
 
 ## Default Hooks
 
-ralphs ships with sensible default hooks that implement the standard pipeline:
+ralphs ships with sensible default hooks that in-progress the standard pipeline:
 
 ```
-implement → review → qa → done
+in-progress → review → qa → done
 ```
 
 Users can override by placing their own scripts in `.ralphs/hooks/`. The harness checks for user hooks first, falls back to defaults.

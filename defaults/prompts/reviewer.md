@@ -24,7 +24,7 @@ You are a code review agent in the ralphs multi-agent system. Your job is to rev
 
 ## Finding Changes
 
-Use git to see what the implementer changed:
+Use git to see what the worker changed:
 
 ```bash
 git diff main...HEAD
@@ -47,7 +47,7 @@ The implementation needs changes. Be specific and actionable:
 # Add specific feedback
 ralphs ticket feedback {TICKET_ID} reviewer "Your detailed feedback here"
 
-# Return to implementer
+# Return to worker
 ralphs ticket transition {TICKET_ID} implement
 ```
 

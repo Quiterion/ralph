@@ -34,7 +34,7 @@ test_fetch_fails_no_session() {
     "$RALPHS_BIN" init --no-session
 
     # fetch with no session should fail
-    if "$RALPHS_BIN" fetch impl-0 2>/dev/null; then
+    if "$RALPHS_BIN" fetch worker-0 2>/dev/null; then
         echo "Fetch should fail without session"
         return 1
     fi
@@ -81,7 +81,7 @@ test_logs_fails_no_session() {
     "$RALPHS_BIN" init --no-session
 
     # logs with no session should fail
-    if "$RALPHS_BIN" logs impl-0 2>/dev/null; then
+    if "$RALPHS_BIN" logs worker-0 2>/dev/null; then
         echo "Logs should fail without session"
         return 1
     fi

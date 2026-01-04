@@ -131,11 +131,10 @@ set -e
 
 # State transition rules
 declare -A TRANSITIONS=(
-    ["ready"]="claimed"
-    ["claimed"]="implement"
-    ["implement"]="review"
-    ["review"]="qa implement"
-    ["qa"]="done implement"
+    ["ready"]="in-progress"
+    ["in-progress"]="review"
+    ["review"]="qa in-progress"
+    ["qa"]="done in-progress"
 )
 
 validate_transition() {
@@ -229,7 +228,7 @@ while read -r oldrev newrev refname; do
             qa)
                 (cd "$PROJECT_ROOT" && "$RALPHS_BIN" hook run on-review-done "$ticket_id" 2>/dev/null &)
                 ;;
-            implement)
+            in-progress)
                 if [[ "$old_state" == "review" ]]; then
                     (cd "$PROJECT_ROOT" && "$RALPHS_BIN" hook run on-review-rejected "$ticket_id" 2>/dev/null &)
                 elif [[ "$old_state" == "qa" ]]; then

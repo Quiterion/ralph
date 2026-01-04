@@ -100,7 +100,7 @@ cmd_init() {
     success "Hooks initialized"
 
     # Copy default prompts if not present
-    for prompt in supervisor.md implementer.md reviewer.md qa.md; do
+    for prompt in supervisor.md worker.md reviewer.md qa.md; do
         if [[ ! -f "$ralphs_dir/prompts/$prompt" ]] && [[ -f "$RALPHS_DEFAULTS/prompts/$prompt" ]]; then
             cp "$RALPHS_DEFAULTS/prompts/$prompt" "$ralphs_dir/prompts/"
         fi

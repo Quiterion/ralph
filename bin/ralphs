@@ -94,7 +94,7 @@ Examples:
   ralphs init
   ralphs ticket create "Add auth" --type feature
   ralphs spawn supervisor
-  ralphs spawn impl tk-5c46
+  ralphs spawn worker tk-5c46
   ralphs status
 EOF
 }
@@ -200,6 +200,11 @@ main() {
         # Ticket subcommands
         ticket)
             cmd_ticket "$@"
+            ;;
+
+        # Hook subcommands
+        hook)
+            cmd_hook "$@"
             ;;
 
         # Utilities

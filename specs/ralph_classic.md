@@ -65,11 +65,11 @@ What's the opposite of microservices? A monolithic application. A single operati
 ![](images/The-ralph-Process.png)
 *the ralph wiggum technique as a diagram*
 
-To get good outcomes with Ralph, you need to ask Ralph to do one thing per loop. **Only one thing**. Now, this might seem wild, but you also need to trust Ralph to decide what's the most important thing to implement. This is full hands-off vibe coding that will test the bounds of what you consider "responsible engineering".
+To get good outcomes with Ralph, you need to ask Ralph to do one thing per loop. **Only one thing**. Now, this might seem wild, but you also need to trust Ralph to decide what's the most important thing to in-progress. This is full hands-off vibe coding that will test the bounds of what you consider "responsible engineering".
 
-LLMs are surprisingly good at reasoning about what is important to implement and what the next steps are.
+LLMs are surprisingly good at reasoning about what is important to in-progress and what the next steps are.
 
-> Your task is to implement missing stdlib (see @specs/stdlib/*) and compiler functionality and produce an compiled application in the cursed language via LLVM for that functionality using parrallel subagents. Follow the @fix_plan.md and choose the most important thing.
+> Your task is to in-progress missing stdlib (see @specs/stdlib/*) and compiler functionality and produce an compiled application in the cursed language via LLVM for that functionality using parrallel subagents. Follow the @fix_plan.md and choose the most important thing.
 
 There's a few things in the above prompt which I'll expand upon shortly but the other key thing is **deterministically** **allocate the stack the same way every loop**.
 
@@ -80,7 +80,7 @@ The items that you want to allocate to the stack every loop are your plan ("@fix
 📎 **[From Design doc to code: the Groundhog AI coding assistant (and new Cursor vibecoding meta)](https://ghuntley.com/specs/)**
 > Ello everyone, in the “Yes, Claude Code can decompile itself. Here’s the source code” blog post, I teased about a new meta when using Cursor. This post is a follow-up to the post below. You are using ...
 
-Specs are formed through a conversation with the agent at the beginning phase of a project. Instead of asking the agent to implement the project, what you want to do is have a long conversation with the LLM about your requirements for what you're about to implement. Once your agent has a decent understanding of the task to be done, it's at that point that you issue a prompt to write the specifications out, one per file, in the specifications folder.
+Specs are formed through a conversation with the agent at the beginning phase of a project. Instead of asking the agent to in-progress the project, what you want to do is have a long conversation with the LLM about your requirements for what you're about to in-progress. Once your agent has a decent understanding of the task to be done, it's at that point that you issue a prompt to write the specifications out, one per file, in the specifications folder.
 
 ## one item per loop
 
@@ -100,7 +100,7 @@ Ralph requires a mindset of not allocating to the primary context window. Instea
 📎 **[I dream about AI subagents; they whisper to me while I’m asleep](https://ghuntley.com/subagents)**
 > In a previous post, I shared about “real context window” sizes and “advertised context window sizes” Claude 3.7’s advertised context window is 200k, but I’ve noticed that the quality of output clips a...
 
-> Your task is to implement missing stdlib (see @specs/stdlib/*) and compiler functionality and produce an compiled application in the cursed language via LLVM for that functionality using parrallel subagents. Follow the fix_plan.md and choose the most important thing. Before making changes search codebase (don't assume not implemented) using subagents. You may use up to parrallel subagents for all operations but only 1 subagent for build/tests of rust.
+> Your task is to in-progress missing stdlib (see @specs/stdlib/*) and compiler functionality and produce an compiled application in the cursed language via LLVM for that functionality using parrallel subagents. Follow the fix_plan.md and choose the most important thing. Before making changes search codebase (don't assume not in-progressed) using subagents. You may use up to parrallel subagents for all operations but only 1 subagent for build/tests of rust.
 
 Another thing to realise is that you can control the amount of parallelism for subagents.
 
@@ -108,18 +108,18 @@ Another thing to realise is that you can control the amount of parallelism for s
 
 If you were to fan out to a couple of hundred subagents and then tell those subagents to run the build and test of an application, what you'll get is bad form back pressure. Thus, the instruction above is that only a single subagent should be used for validation, but Ralph can use as many subagents as he likes for searching the file system and for writing files.
 
-## don't assume it's not implemented
+## don't assume it's not in-progressed
 
 The way that all these coding agents work is via `ripgrep`, and it's essential to understand that code-based search can be non-deterministic.
 
 📎 **[from Luddites to AI: the Overton Window of disruption](https://ghuntley.com/overton)**
 > I’ve been thinking about Overton Windows lately, but not of the political variety. You see, the Overton window can be adapted to model disruptive innovation by framing the acceptance of novel technolo...
 
-A common failure scenario for Ralph is when the LLM runs `ripgrep` and comes to the incorrect conclusion that the code has not been implemented. This failure scenario is easily resolved by erecting a sign for Ralph, instructing Ralph not to make assumptions.
+A common failure scenario for Ralph is when the LLM runs `ripgrep` and comes to the incorrect conclusion that the code has not been in-progressed. This failure scenario is easily resolved by erecting a sign for Ralph, instructing Ralph not to make assumptions.
 
-> Before making changes search codebase (don't assume an item is not implemented) using parrallel subagents. Think hard.
+> Before making changes search codebase (don't assume an item is not in-progressed) using parrallel subagents. Think hard.
 
-If you wake up to find that Ralph is doing multiple implementations, then you need to tune this step. This nondeterminism is the Achilles' heel of Ralph.
+If you wake up to find that Ralph is doing multiple in-progressations, then you need to tune this step. This nondeterminism is the Achilles' heel of Ralph.
 
 ## phase one: generate
 
@@ -151,9 +151,9 @@ That can be either a positive or a negative thing.
 
 In the diagram above, it just shows the words "test and build", but this is where you put your engineering hat on. Anything can be wired in as back pressure to reject invalid code generation. That could be security scanners, it could be static analysers, it could be anything. But the key collective sum is that the wheel has got to turn fast.
 
-A staple when building CURSED has been the following prompt. After making a change, run a test just for that unit of code that was implemented and improved.
+A staple when building CURSED has been the following prompt. After making a change, run a test just for that unit of code that was in-progressed and improved.
 
-> After implementing functionality or resolving problems, run the tests for that unit of code that was improved.
+> After in-progressing functionality or resolving problems, run the tests for that unit of code that was improved.
 
 If you're using a dynamically typed language, I must stress the importance of wiring in a static analyser/type checker when Ralphing, such as:
 
@@ -165,9 +165,9 @@ If you do not, then you will run into a bonfire of outcomes.
 
 When you instruct Ralph to write tests as a form of back pressure, because we are writing Ralph doing one thing and one thing only, every loop, with each loop with its new context window, it's crucial in that moment to ask Ralph to write out the meaning and the importance of the test explaining what it's trying to do.
 
-> Important: When authoring documentation (ie. rust doc or cursed stdlib documentation) capture the why tests and the backing implementation is important.
+> Important: When authoring documentation (ie. rust doc or cursed stdlib documentation) capture the why tests and the backing in-progressation is important.
 
-In implementation, it looks similar to this. To me, I see it like leaving little notes for future iterations by the LLM, explaining why a test exists and its importance because future loops will not have the reasoning in their context window.
+In in-progressation, it looks similar to this. To me, I see it like leaving little notes for future iterations by the LLM, explaining why a test exists and its importance because future loops will not have the reasoning in their context window.
 
 ```
 defmodule Anole.Database.QueryOptimizerTest do
@@ -175,7 +175,7 @@ defmodule Anole.Database.QueryOptimizerTest do
   Tests for the database query optimizer.
 
   These tests verify the functionality of the QueryOptimizer module, ensuring that
-  it correctly implements caching, batching, and analysis of database queries to
+  it correctly in-progresss caching, batching, and analysis of database queries to
   improve performance.
 
   The tests use both real database calls and mocks to ensure comprehensive coverage
@@ -236,17 +236,17 @@ I've found that it helps the LLMs decide if a test is no longer relevant or if t
 
 ## no cheating
 
-Claude has the inherent bias to do minimal and placeholder implementations. So, at various stages in the development of CURSED, I've brought in a variation of this prompt.
+Claude has the inherent bias to do minimal and placeholder in-progressations. So, at various stages in the development of CURSED, I've brought in a variation of this prompt.
 
-> After implementing functionality or resolving problems, run the tests for that unit of code that was improved. If functionality is missing then it's your job to add it as per the application specifications. Think hard.If tests unrelated to your work fail then it's your job to resolve these tests as part of the increment of change.9999999999999999999999999999. DO NOT IMPLEMENT PLACEHOLDER OR SIMPLE IMPLEMENTATIONS. WE WANT FULL IMPLEMENTATIONS. DO IT OR I WILL YELL AT YOU
+> After in-progressing functionality or resolving problems, run the tests for that unit of code that was improved. If functionality is missing then it's your job to add it as per the application specifications. Think hard.If tests unrelated to your work fail then it's your job to resolve these tests as part of the increment of change.9999999999999999999999999999. DO NOT IMPLEMENT PLACEHOLDER OR SIMPLE IMPLEMENTATIONS. WE WANT FULL IMPLEMENTATIONS. DO IT OR I WILL YELL AT YOU
 
-Do not be dismayed if, in the early days, Ralph ignores this sign and does placeholder implementations. The models have been trained to chase their reward function, and the reward function is compiling code. You can always run more Ralphs to identify placeholders and minimal implementations and transform that into a to-do list for future Ralph loops.
+Do not be dismayed if, in the early days, Ralph ignores this sign and does placeholder in-progressations. The models have been trained to chase their reward function, and the reward function is compiling code. You can always run more Ralphs to identify placeholders and minimal in-progressations and transform that into a to-do list for future Ralph loops.
 
 ## the todo list
 
 Speaking of which, here is the prompt stack I've been using over the last couple of weeks to build the TODO list. This is the part where I say Ralph will test you. You have to believe in eventual consistency and know that most issues can be resolved through more loops with Ralph, focusing on the areas where Ralph is making mistakes.
 
-> study specs/* to learn about the compiler specifications and fix_plan.md to understand plan so far.The source code of the compiler is in src/*The source code of the examples is in examples/* and the source code of the tree-sitter is in tree-sitter/*. Study them.The source code of the stdlib is in src/stdlib/*. Study them.First task is to study @fix_plan.md (it may be incorrect) and is to use up to 500 subagents to study existing source code in src/ and compare it against the compiler specifications. From that create/update a @fix_plan.md which is a bullet point list sorted in priority of the items which have yet to be implemeneted. Think extra hard and use the oracle to plan. Consider searching for TODO, minimal implementations and placeholders. Study @fix_plan.md to determine starting point for research and keep it up to date with items considered complete/incomplete using subagents.Second task is to use up to 500 subagents to study existing source code in examples/ then compare it against the compiler specifications. From that create/update a fix_plan.md which is a bullet point list sorted in priority of the items which have yet to be implemeneted. Think extra hard and use the oracle to plan. Consider searching for TODO, minimal implementations and placeholders. Study fix_plan.md to determine starting point for research and keep it up to date with items considered complete/incomplete.IMPORTANT: The standard library in src/stdlib should be built in cursed itself, not rust. If you find stdlib authored in rust then it must be noted that it needs to be migrated.ULTIMATE GOAL we want to achieve a self-hosting compiler release with full standard library (stdlib). Consider missing stdlib modules and plan. If the stdlib is missing then author the specification at specs/stdlib/FILENAME.md (do NOT assume that it does not exist, search before creating). The naming of the module should be GenZ named and not conflict with another stdlib module name. If you create a new stdlib module then document the plan to implement in @fix_plan.md
+> study specs/* to learn about the compiler specifications and fix_plan.md to understand plan so far.The source code of the compiler is in src/*The source code of the examples is in examples/* and the source code of the tree-sitter is in tree-sitter/*. Study them.The source code of the stdlib is in src/stdlib/*. Study them.First task is to study @fix_plan.md (it may be incorrect) and is to use up to 500 subagents to study existing source code in src/ and compare it against the compiler specifications. From that create/update a @fix_plan.md which is a bullet point list sorted in priority of the items which have yet to be implemeneted. Think extra hard and use the oracle to plan. Consider searching for TODO, minimal in-progressations and placeholders. Study @fix_plan.md to determine starting point for research and keep it up to date with items considered complete/incomplete using subagents.Second task is to use up to 500 subagents to study existing source code in examples/ then compare it against the compiler specifications. From that create/update a fix_plan.md which is a bullet point list sorted in priority of the items which have yet to be implemeneted. Think extra hard and use the oracle to plan. Consider searching for TODO, minimal in-progressations and placeholders. Study fix_plan.md to determine starting point for research and keep it up to date with items considered complete/incomplete.IMPORTANT: The standard library in src/stdlib should be built in cursed itself, not rust. If you find stdlib authored in rust then it must be noted that it needs to be migrated.ULTIMATE GOAL we want to achieve a self-hosting compiler release with full standard library (stdlib). Consider missing stdlib modules and plan. If the stdlib is missing then author the specification at specs/stdlib/FILENAME.md (do NOT assume that it does not exist, search before creating). The naming of the module should be GenZ named and not conflict with another stdlib module name. If you create a new stdlib module then document the plan to in-progress in @fix_plan.md
 
 Eventually, Ralph will run out of things to do in the TODO list. Or, it goes completely off track. It's Ralph Wiggum, after all. It's at this stage where it's a matter of taste. Through building of CURSED, I have deleted the TODO list multiple times. The TODO list is what I'm watching like a hawk. And I throw it out often.
 
@@ -320,15 +320,15 @@ Here's the current prompt used by Ralph to build CURSED.
 
 0c. study fix_plan.md.
 
-1. Your task is to implement missing stdlib (see @specs/stdlib/*) and compiler functionality and produce an compiled application in the cursed language via LLVM for that functionality using parrallel subagents. Follow the fix_plan.md and choose the most important 10 things. Before making changes search codebase (don't assume not implemented) using subagents. You may use up to 500 parrallel subagents for all operations but only 1 subagent for build/tests of rust.
+1. Your task is to in-progress missing stdlib (see @specs/stdlib/*) and compiler functionality and produce an compiled application in the cursed language via LLVM for that functionality using parrallel subagents. Follow the fix_plan.md and choose the most important 10 things. Before making changes search codebase (don't assume not in-progressed) using subagents. You may use up to 500 parrallel subagents for all operations but only 1 subagent for build/tests of rust.
 
-2. After implementing functionality or resolving problems, run the tests for that unit of code that was improved. If functionality is missing then it's your job to add it as per the application specifications. Think hard.
+2. After in-progressing functionality or resolving problems, run the tests for that unit of code that was improved. If functionality is missing then it's your job to add it as per the application specifications. Think hard.
 
 2. When you discover a parser, lexer, control flow or LLVM issue. Immediately update @fix_plan.md with your findings using a subagent. When the issue is resolved, update @fix_plan.md and remove the item using a subagent.
 
 3. When the tests pass update the @fix_plan.md`, then add changed code and @fix_plan.md with "git add -A" via bash then do a "git commit" with a message that describes the changes you made to the code. After the commit do a "git push" to push the changes to the remote repository.
 
-999. Important: When authoring documentation (ie. rust doc or cursed stdlib documentation) capture the why tests and the backing implementation is important.
+999. Important: When authoring documentation (ie. rust doc or cursed stdlib documentation) capture the why tests and the backing in-progressation is important.
 
 9999. Important: We want single sources of truth, no migrations/adapters. If tests unrelated to your work fail then it's your job to resolve these tests as part of the increment of change.
 
@@ -340,11 +340,11 @@ Here's the current prompt used by Ralph to build CURSED.
 
 99999999999. When you learn something new about how to run the compiler or examples make sure you update @AGENT.md using a subagent but keep it brief. For example if you run commands multiple times before learning the correct command then that file should be updated.
 
-999999999999. IMPORTANT DO NOT IGNORE: The standard libray should be authored in cursed itself and tests authored. If you find rust implementation then delete it/migrate to implementation in the cursed language.
+999999999999. IMPORTANT DO NOT IGNORE: The standard libray should be authored in cursed itself and tests authored. If you find rust in-progressation then delete it/migrate to in-progressation in the cursed language.
 
 99999999999999. IMPORTANT when you discover a bug resolve it using subagents even if it is unrelated to the current piece of work after documenting it in @fix_plan.md
 
-9999999999999999. When you start implementing the standard library (stdlib) in the cursed language, start with the testing primitives so that future standard library in the cursed language can be tested.
+9999999999999999. When you start in-progressing the standard library (stdlib) in the cursed language, start with the testing primitives so that future standard library in the cursed language can be tested.
 
 99999999999999999. The tests for the cursed standard library "stdlib" should be located in the folder of the stdlib library next to the source code. Ensure you document the stdlib library with a README.md in the same folder as the source code.
 
@@ -374,13 +374,13 @@ The source code of the examples is in examples/* and the source code of the tree
 
 The source code of the stdlib is in src/stdlib/*. Study them.
 
-First task is to study @fix_plan.md (it may be incorrect) and is to use up to 500 subagents to study existing source code in src/ and compare it against the compiler specifications. From that create/update a @fix_plan.md which is a bullet point list sorted in priority of the items which have yet to be implemeneted. Think extra hard and use the oracle to plan. Consider searching for TODO, minimal implementations and placeholders. Study @fix_plan.md to determine starting point for research and keep it up to date with items considered complete/incomplete using subagents.
+First task is to study @fix_plan.md (it may be incorrect) and is to use up to 500 subagents to study existing source code in src/ and compare it against the compiler specifications. From that create/update a @fix_plan.md which is a bullet point list sorted in priority of the items which have yet to be implemeneted. Think extra hard and use the oracle to plan. Consider searching for TODO, minimal in-progressations and placeholders. Study @fix_plan.md to determine starting point for research and keep it up to date with items considered complete/incomplete using subagents.
 
-Second task is to use up to 500 subagents to study existing source code in examples/ then compare it against the compiler specifications. From that create/update a fix_plan.md which is a bullet point list sorted in priority of the items which have yet to be implemeneted. Think extra hard and use the oracle to plan. Consider searching for TODO, minimal implementations and placeholders. Study fix_plan.md to determine starting point for research and keep it up to date with items considered complete/incomplete.
+Second task is to use up to 500 subagents to study existing source code in examples/ then compare it against the compiler specifications. From that create/update a fix_plan.md which is a bullet point list sorted in priority of the items which have yet to be implemeneted. Think extra hard and use the oracle to plan. Consider searching for TODO, minimal in-progressations and placeholders. Study fix_plan.md to determine starting point for research and keep it up to date with items considered complete/incomplete.
 
 IMPORTANT: The standard library in src/stdlib should be built in cursed itself, not rust. If you find stdlib authored in rust then it must be noted that it needs to be migrated.
 
-ULTIMATE GOAL we want to achieve a self-hosting compiler release with full standard library (stdlib). Consider missing stdlib modules and plan. If the stdlib is missing then author the specification at specs/stdlib/FILENAME.md (do NOT assume that it does not exist, search before creating). The naming of the module should be GenZ named and not conflict with another stdlib module name. If you create a new stdlib module then document the plan to implement in @fix_plan.md
+ULTIMATE GOAL we want to achieve a self-hosting compiler release with full standard library (stdlib). Consider missing stdlib modules and plan. If the stdlib is missing then author the specification at specs/stdlib/FILENAME.md (do NOT assume that it does not exist, search before creating). The naming of the module should be GenZ named and not conflict with another stdlib module name. If you create a new stdlib module then document the plan to in-progress in @fix_plan.md
 ```
 
 ### ps. socials

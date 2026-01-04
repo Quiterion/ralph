@@ -41,7 +41,7 @@ No daemons. No databases. Just shell scripts, markdown files, and Unix philosoph
 
 8. **Summarization over raw data** — Supervisors invoke tools that return *insights*, not 10k tokens of trajectory logs. (See: [tools.md](./tools.md) for the WebFetch analogy)
 
-9. **Pipeline as hooks** — Backpressure stages (implement → review → QA) encoded as hooks triggered by ticket state transitions.
+9. **Pipeline as hooks** — Backpressure stages (in-progress → review → QA) encoded as hooks triggered by ticket state transitions.
 
 10. **Agent-agnostic** — Works with any inner harness that can read files, write files, run shell commands.
 

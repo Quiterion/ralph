@@ -45,6 +45,34 @@ run_hook() {
     fi
 }
 
+# Hook subcommand router
+cmd_hook() {
+    if [[ $# -eq 0 ]]; then
+        error "Usage: ralphs hook <run|list> [args]"
+        exit "$EXIT_INVALID_ARGS"
+    fi
+
+    local subcmd="$1"
+    shift
+
+    case "$subcmd" in
+        run)
+            if [[ $# -lt 2 ]]; then
+                error "Usage: ralphs hook run <hook-name> <ticket-id>"
+                exit "$EXIT_INVALID_ARGS"
+            fi
+            run_hook "$1" "$2"
+            ;;
+        list)
+            list_hooks
+            ;;
+        *)
+            error "Unknown hook subcommand: $subcmd"
+            exit "$EXIT_INVALID_ARGS"
+            ;;
+    esac
+}
+
 # List available hooks
 list_hooks() {
     require_project

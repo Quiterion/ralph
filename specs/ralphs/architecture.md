@@ -9,7 +9,7 @@
 │  │ window: main                                              │  │
 │  │  ┌─────────────┬─────────────┬─────────────┬───────────┐  │  │
 │  │  │ pane 0      │ pane 1      │ pane 2      │ pane 3    │  │  │
-│  │  │ supervisor  │ impl-0      │ impl-1      │ review-0  │  │  │
+│  │  │ supervisor  │ worker-0    │ worker-1    │ reviewer-0│  │  │
 │  │  │             │ tk-5c46     │ tk-8a2b     │ tk-5c46   │  │  │
 │  │  └─────────────┴─────────────┴─────────────┴───────────┘  │  │
 │  └───────────────────────────────────────────────────────────┘  │
@@ -21,7 +21,7 @@
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │
 │  │ tk-5c46  │  │ tk-8a2b  │  │ tk-9f3c  │  │ tk-epic  │        │
 │  │ state:   │  │ state:   │  │ state:   │  │ children:│        │
-│  │ review   │  │ implement│  │ ready    │  │ 5c46,... │        │
+│  │ review   │  │in-progress│  │ ready    │  │ (future) │        │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘        │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -66,19 +66,19 @@ project/                               # main project (human's workspace)
 │   │   └── on-close
 │   └── prompts/                       # agent role templates
 │       ├── supervisor.md
-│       ├── implementer.md
+│       ├── worker.md
 │       ├── reviewer.md
 │       └── qa.md
 ├── worktrees/                         # agent worktrees
 │   ├── supervisor-0/                  # supervisor's worktree
 │   │   └── .ralphs/tickets/           # clone
-│   └── impl-0/
+│   └── worker-0/
 │       └── .ralphs/tickets/           # clone
 ├── specs/                             # project specifications
 └── AGENT.md                           # inner harness instructions
 ```
 
-Each agent works in its own git worktree with a cloned tickets repo. The main project also has a clone for running CLI commands. See [distributed-tickets.md](./distributed-tickets.md) for synchronization details.
+Each agent works in its own git worktree with a cloned tickets repo. The main project also has a clone for running CLI commands. See [tickets.md](./tickets.md#sync--distribution) for synchronization details.
 
 ---
 
@@ -112,7 +112,7 @@ while :; do
   # Spawn new workers for ready tickets
   for ticket in $(ralphs ticket ready --limit 3); do
     if ralphs has-capacity; then
-      ralphs spawn impl $ticket
+      ralphs spawn worker $ticket
     fi
   done
 

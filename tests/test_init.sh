@@ -48,7 +48,7 @@ test_init_copies_default_hooks() {
 test_init_copies_default_prompts() {
     "$RALPHS_BIN" init --no-session
     assert_file_exists ".ralphs/prompts/supervisor.md" "Init should copy supervisor prompt"
-    assert_file_exists ".ralphs/prompts/implementer.md" "Init should copy implementer prompt"
+    assert_file_exists ".ralphs/prompts/worker.md" "Init should copy worker prompt"
 }
 
 test_init_idempotent() {

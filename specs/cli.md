@@ -108,11 +108,11 @@ wiggum list [--format FORMAT]
 **Output:**
 
 ```
-PANE       ROLE        TICKET     STATE        UPTIME
-0          supervisor-0  -          running      2h 15m
-1          worker-0    tk-5c46    running      1h 30m
-2          worker-1    tk-8a2b    running      45m
-3          reviewer-0    tk-3a1b    running      10m
+AGENT        ROLE         TICKET       UPTIME
+supervisor-0 supervisor   —            2h 15m
+worker-0     worker       tk-5c46      1h 30m
+worker-1     worker       tk-8a2b      45m
+reviewer-0   reviewer     tk-3a1b      10m
 ```
 
 ---

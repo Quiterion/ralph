@@ -13,13 +13,13 @@ This document enumerates test cases for the fixes in commit e5afc88.
 
 | ID | Description | Input | Expected |
 |----|-------------|-------|----------|
-| 1.1 | Empty registry | `[]` | Empty table, no errors |
-| 1.2 | Single pane | `[{"pane": "worker-0", "role": "worker", "ticket": "tk-1234", "started_at": "..."}]` | One row displayed |
-| 1.3 | Multiple panes | Array with 3+ entries | All rows displayed |
-| 1.4 | Missing optional fields | Entry with empty `ticket` | Shows "—" for ticket |
-| 1.5 | Malformed JSON | `[{broken` | Graceful error or warning |
+| 1.1 | Empty registry | `{}` | Empty table, no errors |
+| 1.2 | Single agent | `{"worker-0": {"role": "worker", "tmux_pane_id": "%5", "started_at": "..."}}` | One row displayed |
+| 1.3 | Multiple agents | Object with 3+ entries | All rows displayed |
+| 1.4 | Ticket computed from tickets | Agent with assigned ticket | Shows ticket from assigned_agent_id lookup |
+| 1.5 | Malformed JSON | `{{broken` | Graceful error or warning |
 | 1.6 | No jq installed | Disable jq | Falls back to grep-based parsing |
-| 1.7 | Special characters in pane name | `pane: "impl-foo_bar"` | Displayed correctly |
+| 1.7 | Special characters in agent ID | `worker-foo_bar-0` | Displayed correctly |
 
 ---
 

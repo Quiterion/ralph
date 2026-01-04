@@ -71,7 +71,7 @@ priority: 1          # 0 (highest) to 4 (lowest)
 state: in-progress
 
 # Assignment
-assigned_pane: worker-0
+assigned_agent_id: worker-0
 assigned_at: 2025-07-14T10:30:00Z
 
 # Dependencies

@@ -63,7 +63,7 @@ WIGGUM_TICKET_ID     # Same as $1
 WIGGUM_TICKET_PATH   # Full path to ticket file
 WIGGUM_PREV_STATE    # State before transition
 WIGGUM_NEW_STATE     # State after transition
-WIGGUM_PANE          # Pane that triggered transition (if any)
+WIGGUM_AGENT_ID      # Agent that triggered transition (if any)
 WIGGUM_SESSION       # tmux session name
 ```
 
@@ -94,7 +94,7 @@ Inject feedback and ping the worker:
 # .wiggum/hooks/on-review-rejected
 
 TICKET_ID="$1"
-IMPL_PANE="$WIGGUM_PANE"
+AGENT_ID="$WIGGUM_AGENT_ID"
 
 echo "[hook] Review rejected for $TICKET_ID"
 
@@ -102,8 +102,8 @@ echo "[hook] Review rejected for $TICKET_ID"
 wiggum ticket transition "$TICKET_ID" in-progress
 
 # Ping the original worker (if still running)
-if [[ -n "$IMPL_PANE" ]]; then
-  wiggum ping "$IMPL_PANE" "Review feedback added to your ticket. Please address."
+if [[ -n "$AGENT_ID" ]]; then
+  wiggum ping "$AGENT_ID" "Review feedback added to your ticket. Please address."
 fi
 ```
 

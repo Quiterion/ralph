@@ -220,6 +220,10 @@ while read -r oldrev newrev refname; do
 
         [[ "$old_state" == "$new_state" ]] && continue
 
+        # Export state info for hooks
+        export WIGGUM_PREV_STATE="$old_state"
+        export WIGGUM_NEW_STATE="$new_state"
+
         # Trigger appropriate hook via wiggum (background to avoid blocking)
         case "$new_state" in
             review)

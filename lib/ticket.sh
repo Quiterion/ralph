@@ -527,7 +527,7 @@ ticket_claim() {
 # Transition ticket state
 ticket_transition() {
     if [[ $# -lt 2 ]]; then
-        error "Usage: wiggum ticket transition <id> <state> [--no-hooks] [--no-sync]"
+        error "Usage: wiggum ticket transition <id> <state> [--no-sync]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -536,14 +536,9 @@ ticket_transition() {
     local new_state="$2"
     shift 2
 
-    local skip_hooks=false
     local no_sync=false
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --no-hooks)
-                skip_hooks=true
-                shift
-                ;;
             --no-sync)
                 no_sync=true
                 shift
@@ -587,46 +582,7 @@ ticket_transition() {
     # Update state
     set_frontmatter_value "$ticket_path" "state" "$new_state"
 
-    # Determine hook to run
-    local hook_name=""
-    case "$new_state" in
-        review)
-            hook_name="on-draft-done"
-            ;;
-        qa)
-            hook_name="on-review-done"
-            ;;
-        in-progress)
-            if [[ "$current_state" == "review" ]]; then
-                hook_name="on-review-rejected"
-            elif [[ "$current_state" == "qa" ]]; then
-                hook_name="on-qa-rejected"
-            fi
-            ;;
-        done)
-            hook_name="on-qa-done"
-            ;;
-    esac
-
-    # Export context for hooks
-    export WIGGUM_TICKET_ID="$id"
-    export WIGGUM_TICKET_PATH="$ticket_path"
-    export WIGGUM_PREV_STATE="$current_state"
-    export WIGGUM_NEW_STATE="$new_state"
-    WIGGUM_AGENT_ID=$(get_frontmatter_value "$ticket_path" "assigned_agent_id")
-    export WIGGUM_AGENT_ID
-
-    # Run hook
-    if [[ "$skip_hooks" != "true" ]] && [[ -n "$hook_name" ]]; then
-        run_hook "$hook_name" "$id"
-    fi
-
-    # Run on-close if done
-    if [[ "$new_state" == "done" ]] && [[ "$skip_hooks" != "true" ]]; then
-        run_hook "on-close" "$id"
-    fi
-
-    # Sync after write operation
+    # Sync after write operation (hooks triggered by post-receive in bare repo)
     # shellcheck disable=SC2015
     [[ "$no_sync" != "true" ]] && ticket_sync_push "Transition $id: $current_state → $new_state" 2>/dev/null || true
 

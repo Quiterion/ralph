@@ -505,7 +505,7 @@ cmd_has_capacity() {
         current=$((current > 0 ? current - 1 : 0))
     fi
 
-    if [[ $current -lt $RALPHS_MAX_WORKERS ]]; then
+    if [[ $current -lt $RALPHS_MAX_AGENTS ]]; then
         echo "true"
         return 0
     else

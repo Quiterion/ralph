@@ -115,7 +115,7 @@ ralphs list [--format FORMAT]
 
 ```
 PANE       ROLE        TICKET     STATE        UPTIME
-0          supervisor  -          running      2h 15m
+0          supervisor-0  -          running      2h 15m
 1          worker-0    tk-5c46    running      1h 30m
 2          worker-1    tk-8a2b    running      45m
 3          reviewer-0    tk-3a1b    running      10m
@@ -169,18 +169,18 @@ ralphs status [--verbose]
 ```
 SESSION: ralphs-myproject (4 panes)
 
-WORKERS:
-  worker-0    tk-5c46    in-progress    1h 30m
-  worker-1    tk-8a2b    in-progress    45m
-  reviewer-0    tk-3a1b    review       10m
+AGENTS:
+  supervisor-0  -          -              2h 15m
+  worker-0      tk-5c46    in-progress    1h 30m
+  worker-1      tk-8a2b    in-progress    45m
+  reviewer-0    tk-3a1b    review         10m
 
 TICKETS:
-  ready:      2
+  ready:        2 (1 blocked by deps)
   in-progress:  2
-  review:     1
-  qa:         0
-  done:       5
-  blocked:    1
+  review:       1
+  qa:           0
+  done:         5
 ```
 
 ---
@@ -278,6 +278,19 @@ ralphs ticket transition <id> <state> [--no-hooks]
 ralphs ticket feedback <id> <source> <message>
 ```
 
+**Arguments:**
+- `id` — Target ticket
+- `source` — Who's giving feedback (e.g., `reviewer`, `qa`)
+- `message` — The feedback content
+
+**Example:**
+
+```bash
+ralphs ticket feedback tk-5c46 reviewer "Missing rate limiting. Add test for expired tokens."
+```
+
+Appends feedback to the ticket and pings the assigned worker pane if one exists.
+
 ### Sync
 
 Ticket operations auto-sync with the bare repo. Manual sync:
@@ -301,13 +314,13 @@ ralphs hook run <hook-name> <ticket-id>
 ```
 
 **Arguments:**
-- `hook-name` — Name of the hook (e.g., `on-implement-done`, `on-review-rejected`)
+- `hook-name` — Name of the hook (e.g., `on-in-progress-done`, `on-review-rejected`)
 - `ticket-id` — Ticket to pass to the hook
 
 **Example:**
 
 ```bash
-ralphs hook run on-implement-done tk-5c46
+ralphs hook run on-in-progress-done tk-5c46
 ```
 
 Useful for testing hooks or manual intervention.
@@ -347,7 +360,7 @@ These can be set in `.ralphs/config.sh` or exported:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `RALPHS_SESSION` | tmux session name | `ralphs-<dirname>` |
-| `RALPHS_MAX_WORKERS` | Max concurrent worker panes | `4` |
+| `RALPHS_MAX_AGENTS` | Max concurrent agent panes (excludes supervisor) | `4` |
 | `RALPHS_POLL_INTERVAL` | Supervisor poll interval (seconds) | `10` |
 | `RALPHS_AGENT_CMD` | Inner harness command | `claude` |
 | `RALPHS_LAYOUT` | tmux pane layout | `tiled` |

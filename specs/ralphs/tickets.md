@@ -13,7 +13,7 @@ Rather than bolting ticket management onto ralphs, we subsume it:
 - **Single mental model** — `.ralphs/` is the whole system
 - **Unified state machine** — One `state` field, not `status` vs `stage`
 - **First-class hooks** — State transitions naturally trigger hooks
-- **Cleaner in-progressation** — No impedance mismatch
+- **Cleaner implementation** — No impedance mismatch
 
 The underlying `tk` CLI is vendored and available, but users interact via `ralphs ticket` commands.
 
@@ -50,7 +50,7 @@ The underlying `tk` CLI is vendored and available, but users interact via `ralph
 | From | To | Trigger | Hook |
 |------|----|---------|------|
 | `ready` | `in-progress` | Worker assigned to ticket | `on-claim` |
-| `in-progress` | `review` | Worker marks done | `on-implement-done` |
+| `in-progress` | `review` | Worker marks done | `on-in-progress-done` |
 | `review` | `qa` | Reviewer approves | `on-review-done` |
 | `review` | `in-progress` | Reviewer rejects | `on-review-rejected` |
 | `qa` | `done` | QA passes | `on-qa-done` → `on-close` |

@@ -41,7 +41,7 @@ The supervisor's context stays clean. The "grunt work" of reading trajectories a
 | Long-running work | Quick summarization |
 | Human oversight needed | Fire-and-forget |
 | Produces artifacts | Returns insight |
-| Workers, reviewers, QA | Tool in-progressations |
+| Workers, reviewers, QA | Tool implementations |
 
 The distinction: if work is substantial enough to warrant observation and potential intervention, it gets a pane. If it's a quick internal operation, it stays ephemeral.
 
@@ -129,34 +129,17 @@ ralphs context tk-5c46 "what specs are relevant?"
 
 ### ralphs ticket feedback
 
-Append feedback to a ticket and notify the worker.
+Append feedback to a ticket and notify the worker. See [cli.md](./cli.md#feedback) for command details.
 
-```bash
-ralphs ticket feedback <ticket-id> <source> <message>
-```
+This command is listed here because it has **tool-like side effects** beyond simple file editing:
 
-**Arguments:**
-- `ticket-id` — Target ticket
-- `source` — Who's giving feedback (e.g., "reviewer", "qa")
-- `message` — The feedback content
-
-**Example:**
-
-```bash
-ralphs ticket feedback tk-5c46 reviewer "Missing rate limiting. Add test for expired tokens."
-```
-
-**Effect:**
-1. Appends to ticket's Feedback section:
-   ```markdown
-   ### From reviewer (2025-07-14 14:30)
-
-   Missing rate limiting. Add test for expired tokens.
-   ```
-2. If ticket has an assigned pane, pings it:
+1. Appends timestamped feedback to ticket's `## Feedback` section
+2. If ticket has an assigned pane, pings the worker:
    ```bash
    tmux send-keys -t worker-0 "# Feedback added to your ticket. Please address." Enter
    ```
+
+This notification loop is how rejected reviews/QA get the worker's attention.
 
 ---
 

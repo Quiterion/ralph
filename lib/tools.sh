@@ -39,8 +39,8 @@ cmd_status() {
     echo "  Panes: $pane_count"
     echo ""
 
-    # Show workers
-    echo "${BOLD}WORKERS:${NC}"
+    # Show agents
+    echo "${BOLD}AGENTS:${NC}"
     local registry="$PROJECT_ROOT/$PANE_REGISTRY_FILE"
     if [[ -f "$registry" ]] && [[ -s "$registry" ]] && [[ "$(cat "$registry")" != "[]" ]]; then
         while IFS= read -r line; do
@@ -67,7 +67,7 @@ cmd_status() {
             printf "  %-12s %-12s %-12s %-10s\n" "$pane" "${ticket:-—}" "${state:-—}" "$uptime"
         done < <(tr ',' '\n' < "$registry")
     else
-        echo "  (no workers)"
+        echo "  (no agents)"
     fi
     echo ""
 
@@ -223,10 +223,10 @@ cmd_digest() {
 
 "
 
-    # Add worker summaries
+    # Add agent summaries
     local registry="$PROJECT_ROOT/$PANE_REGISTRY_FILE"
     if [[ -f "$registry" ]] && [[ -s "$registry" ]]; then
-        context="$context## Active Workers
+        context="$context## Active Agents
 
 "
         while IFS= read -r line; do

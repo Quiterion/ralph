@@ -1,6 +1,6 @@
 # Hooks
 
-Hooks are shell scripts triggered by ticket state transitions. They encode the pipeline logic—when in-progressation finishes, spawn a reviewer; when review passes, spawn QA; etc.
+Hooks are shell scripts triggered by ticket state transitions. They encode the pipeline logic—when implementation finishes, spawn a reviewer; when review passes, spawn QA; etc.
 
 Hooks are **git-style**, not agent-specific. This keeps ralphs agent-agnostic: any inner harness that can read/write files works.
 
@@ -13,7 +13,7 @@ Hooks live in `.ralphs/hooks/`:
 ```
 .ralphs/hooks/
 ├── on-claim
-├── on-implement-done
+├── on-in-progress-done
 ├── on-review-done
 ├── on-review-rejected
 ├── on-qa-done
@@ -37,7 +37,7 @@ See [tickets.md](./tickets.md#sync--distribution) for details on the git hook in
 | Hook | Trigger | Typical Use |
 |------|---------|-------------|
 | `on-claim` | Ticket in-progress by worker | Log, notify, setup |
-| `on-implement-done` | Worker finishes in-progressation | Spawn reviewer |
+| `on-in-progress-done` | Worker finishes implementation | Spawn reviewer |
 | `on-review-done` | Reviewer approves | Spawn QA agent |
 | `on-review-rejected` | Reviewer rejects | Inject feedback, ping worker |
 | `on-qa-done` | QA passes | Close ticket |
@@ -71,13 +71,13 @@ RALPHS_SESSION       # tmux session name
 
 ## Example Hooks
 
-### on-implement-done
+### on-in-progress-done
 
-Spawn a review agent when in-progressation completes:
+Spawn a review agent when implementation completes:
 
 ```bash
 #!/bin/bash
-# .ralphs/hooks/on-implement-done
+# .ralphs/hooks/on-in-progress-done
 
 TICKET_ID="$1"
 

@@ -35,9 +35,9 @@ This document enumerates test cases for the fixes in commit e5afc88.
 |----|-------------|-------|----------|
 | 2.1 | No registry file | File doesn't exist | Returns `0` |
 | 2.2 | Empty registry | `[]` | Returns `0` |
-| 2.3 | No matching role | Registry has `supervisor`, query `impl` | Returns `0` |
-| 2.4 | One matching role | One `impl` entry | Returns `1` |
-| 2.5 | Multiple matching | Three `impl` entries | Returns `3` |
+| 2.3 | No matching role | Registry has `supervisor-0`, query `worker` | Returns `0` |
+| 2.4 | One matching role | One `worker` entry | Returns `1` |
+| 2.5 | Multiple matching | Three `worker` entries | Returns `3` |
 | 2.6 | No newlines in output | Any input | Output is single line, no `\n` |
 
 ---
@@ -54,8 +54,8 @@ This document enumerates test cases for the fixes in commit e5afc88.
 | ID | Description | Input | Expected |
 |----|-------------|-------|----------|
 | 3.1 | Supervisor role | `role=supervisor` | Loads `supervisor.md`, substitutes `{PROJECT_SPECS}` |
-| 3.2 | Implementer role | `role=worker` | Maps to `worker.md` |
-| 3.3 | Reviewer role | `role=review` | Maps to `reviewer.md` |
+| 3.2 | Worker role | `role=worker` | Loads `worker.md` |
+| 3.3 | Reviewer role | `role=reviewer` | Loads `reviewer.md` |
 | 3.4 | With ticket | `ticket_id=tk-1234` | Reads ticket, substitutes `{TICKET_CONTENT}` |
 | 3.5 | Without ticket | `ticket_id=""` | No ticket substitution |
 | 3.6 | Missing template | No `foobar.md` exists | Returns minimal fallback prompt |
@@ -107,7 +107,7 @@ This document enumerates test cases for the fixes in commit e5afc88.
 | 5.4 | Session from worktree | In worktree | Session = `ralphs-<proj-basename>` |
 | 5.5 | Config from worktree | In worktree | Loads `/proj/.ralphs/config.sh` |
 | 5.6 | Panes.json from worktree | `ralphs list` in worktree | Reads `/proj/.ralphs/panes.json` |
-| 5.7 | Spawn from worktree | `ralphs spawn impl tk-xxx` | Creates worktree under `/proj/worktrees/` |
+| 5.7 | Spawn from worktree | `ralphs spawn worker tk-xxx` | Creates worktree under `/proj/worktrees/` |
 | 5.8 | Tickets per-worktree | Worktree `.ralphs/tickets/` | Each worktree has own tickets clone |
 | 5.9 | Hooks from main | Hook triggered in worktree | Uses `/proj/.ralphs/hooks/` |
 | 5.10 | Prompts from main | Spawn in worktree | Uses `/proj/.ralphs/prompts/` |
@@ -118,7 +118,7 @@ This document enumerates test cases for the fixes in commit e5afc88.
 
 | ID | Description | Steps | Expected |
 |----|-------------|-------|----------|
-| I.1 | Full spawn cycle | init → create ticket → spawn impl → verify | Agent running with prompt, pane registered |
+| I.1 | Full spawn cycle | init → create ticket → spawn worker → verify | Agent running with prompt, pane registered |
 | I.2 | Supervisor orchestration | Spawn supervisor → let it spawn worker | Worker spawned for ready ticket |
 | I.3 | Cross-worktree visibility | Spawn from main, list from worktree | Same pane list |
 | I.4 | Vim mode end-to-end | Enable vim, spawn, ping | All inputs work correctly |

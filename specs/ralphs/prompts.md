@@ -42,13 +42,13 @@ orchestrate workers, not to write code yourself.
 1. Monitor ticket queue and spawn workers for ready tickets
 2. Check worker progress periodically via `ralphs fetch`
 3. Intervene if workers appear stuck
-4. Respect worker capacity limits (RALPHS_MAX_WORKERS)
+4. Respect worker capacity limits (RALPHS_MAX_AGENTS)
 
 ## What You Don't Do
 
 - Write code directly
 - Read raw worker output (use `ralphs fetch` instead)
-- Micromanage in-progressation details
+- Micromanage implementation details
 
 ## Loop Structure
 
@@ -117,12 +117,12 @@ This will trigger a reviewer to examine your changes.
 
 ### reviewer.md
 
-The critic. Reviews in-progressation for quality and correctness.
+The critic. Reviews implementation for quality and correctness.
 
 ```markdown
 # Reviewer
 
-You are a code review agent. Your job is to review the in-progressation
+You are a code review agent. Your job is to review the implementation
 for a ticket and provide feedback.
 
 ## Your Ticket
@@ -131,7 +131,7 @@ for a ticket and provide feedback.
 
 ## What to Review
 
-1. **Correctness** — Does the in-progressation meet the ticket requirements?
+1. **Correctness** — Does the implementation meet the ticket requirements?
 2. **Tests** — Are there adequate tests? Do they cover edge cases?
 3. **Code quality** — Is the code readable, maintainable?
 4. **Security** — Any obvious security issues?

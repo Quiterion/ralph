@@ -5,7 +5,7 @@
 
 # Default configuration values
 : "${RALPHS_SESSION:=""}"
-: "${RALPHS_MAX_WORKERS:=4}"
+: "${RALPHS_MAX_AGENTS:=4}"
 : "${RALPHS_POLL_INTERVAL:=10}"
 : "${RALPHS_AGENT_CMD:=claude}"
 : "${RALPHS_LAYOUT:=tiled}"
@@ -96,8 +96,8 @@ write_default_config() {
 # Session name for tmux
 : "\${RALPHS_SESSION:=ralphs-${dirname}}"
 
-# Max concurrent worker panes
-: "\${RALPHS_MAX_WORKERS:=4}"
+# Max concurrent agent panes (excludes supervisor)
+: "\${RALPHS_MAX_AGENTS:=4}"
 
 # Poll interval for supervisor (seconds)
 : "\${RALPHS_POLL_INTERVAL:=10}"

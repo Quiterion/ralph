@@ -9,7 +9,7 @@
 │  │ window: main                                              │  │
 │  │  ┌─────────────┬─────────────┬─────────────┬───────────┐  │  │
 │  │  │ pane 0      │ pane 1      │ pane 2      │ pane 3    │  │  │
-│  │  │ supervisor  │ worker-0    │ worker-1    │ reviewer-0│  │  │
+│  │  │ supervisor-0│ worker-0    │ worker-1    │ reviewer-0│  │  │
 │  │  │             │ tk-5c46     │ tk-8a2b     │ tk-5c46   │  │  │
 │  │  └─────────────┴─────────────┴─────────────┴───────────┘  │  │
 │  └───────────────────────────────────────────────────────────┘  │
@@ -28,7 +28,7 @@
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      .ralphs/hooks/                             │
-│  on-claim │ on-implement-done │ on-review-done │ on-close       │
+│  on-claim │ on-in-progress-done │ on-review-done │ on-close       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -59,7 +59,7 @@ project/                               # main project (human's workspace)
 │   │   └── tk-8a2b.md
 │   ├── hooks/                         # state transition hooks
 │   │   ├── on-claim
-│   │   ├── on-implement-done
+│   │   ├── on-in-progress-done
 │   │   ├── on-review-done
 │   │   ├── on-review-rejected
 │   │   ├── on-qa-done
@@ -159,8 +159,8 @@ The [tools](./tools.md) invoke ephemeral agents internally—like how `WebFetch`
 # Session name
 RALPHS_SESSION="ralphs-myproject"
 
-# Max concurrent worker panes
-RALPHS_MAX_WORKERS=4
+# Max concurrent agent panes (excludes supervisor)
+RALPHS_MAX_AGENTS=4
 
 # Poll interval for supervisor (seconds)
 RALPHS_POLL_INTERVAL=10

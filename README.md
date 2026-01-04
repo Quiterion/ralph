@@ -1,7 +1,7 @@
 # wiggum: Multi-Agent Orchestration Harness
 
 **Version:** 0.1.0-draft
-**Lineage:** Evolved from [Classic Ralph](../ralph_classic.md)
+**Lineage:** Evolved from [Classic Ralph](https://ghuntley.com/ralph/)
 
 ---
 

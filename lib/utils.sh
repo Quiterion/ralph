@@ -45,6 +45,7 @@ error() {
 }
 
 debug() {
+    # shellcheck disable=SC2015
     [[ "$RALPHS_VERBOSE" == "true" ]] && log "${CYAN}[debug]${NC} $*" || true
 }
 
@@ -112,7 +113,7 @@ get_project_root() {
 require_project() {
     if ! PROJECT_ROOT=$(get_project_root); then
         error "Not in a ralphs project. Run 'ralphs init' first."
-        exit $EXIT_ERROR
+        exit "$EXIT_ERROR"
     fi
     RALPHS_DIR="$PROJECT_ROOT/.ralphs"
     TICKETS_DIR="$RALPHS_DIR/tickets"
@@ -195,7 +196,7 @@ require_command() {
     local cmd="$1"
     if ! command -v "$cmd" &>/dev/null; then
         error "Required command not found: $cmd"
-        exit $EXIT_ERROR
+        exit "$EXIT_ERROR"
     fi
 }
 

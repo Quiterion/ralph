@@ -27,7 +27,7 @@ cmd_init() {
                 ;;
             *)
                 error "Unknown option: $1"
-                exit $EXIT_INVALID_ARGS
+                exit "$EXIT_INVALID_ARGS"
                 ;;
         esac
     done
@@ -36,16 +36,16 @@ cmd_init() {
     local project_root
     if project_root=$(get_project_root 2>/dev/null); then
         info "Already in ralphs project at $project_root"
-        cd "$project_root" || exit $EXIT_ERROR
+        cd "$project_root" || exit "$EXIT_ERROR"
     else
         # Find git root - ralphs must be initialized at the repo root
         local git_root
         if ! git_root=$(get_git_root); then
             error "Not in a git repository. Run 'git init' first."
-            exit $EXIT_ERROR
+            exit "$EXIT_ERROR"
         fi
         # Change to git root for all operations
-        cd "$git_root" || exit $EXIT_ERROR
+        cd "$git_root" || exit "$EXIT_ERROR"
     fi
 
     # Create .ralphs directory structure
@@ -151,7 +151,7 @@ cmd_attach() {
                 ;;
             *)
                 error "Unknown option: $1"
-                exit $EXIT_INVALID_ARGS
+                exit "$EXIT_INVALID_ARGS"
                 ;;
         esac
     done
@@ -161,7 +161,7 @@ cmd_attach() {
 
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session '$RALPHS_SESSION' not found"
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     tmux attach-session -t "$RALPHS_SESSION"
@@ -179,7 +179,7 @@ cmd_teardown() {
                 ;;
             *)
                 error "Unknown option: $1"
-                exit $EXIT_INVALID_ARGS
+                exit "$EXIT_INVALID_ARGS"
                 ;;
         esac
     done
@@ -188,7 +188,7 @@ cmd_teardown() {
 
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session '$RALPHS_SESSION' not found"
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Check for active workers unless force
@@ -197,7 +197,7 @@ cmd_teardown() {
     pane_count=$(tmux list-panes -t "$RALPHS_SESSION" 2>/dev/null | wc -l)
         if [[ $pane_count -gt 1 ]]; then
             warn "Active workers detected. Use --force to kill anyway."
-            exit $EXIT_ERROR
+            exit "$EXIT_ERROR"
         fi
     fi
 

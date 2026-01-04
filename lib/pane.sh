@@ -80,7 +80,7 @@ unregister_pane() {
 cmd_spawn() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs spawn <role> [ticket-id] [--prompt PATH]"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local role="$1"
@@ -95,18 +95,18 @@ cmd_spawn() {
     # Validate session
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session not found. Run 'ralphs init' first."
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Supervisor doesn't need a ticket
     if [[ "$role" != "supervisor" ]] && [[ -z "$ticket_id" ]]; then
         error "Ticket ID required for role: $role"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     # Resolve ticket ID if provided
     if [[ -n "$ticket_id" ]]; then
-        ticket_id=$(resolve_ticket_id "$ticket_id") || exit $EXIT_TICKET_NOT_FOUND
+        ticket_id=$(resolve_ticket_id "$ticket_id") || exit "$EXIT_TICKET_NOT_FOUND"
     fi
 
     # Build pane name
@@ -133,7 +133,9 @@ cmd_spawn() {
         clone_tickets_to_worktree "$worktree_path/.ralphs"
 
         # Copy hooks and prompts
+        # shellcheck disable=SC2015
         [[ -d "$RALPHS_DIR/hooks" ]] && cp -r "$RALPHS_DIR/hooks/"* "$worktree_path/.ralphs/hooks/" 2>/dev/null || true
+        # shellcheck disable=SC2015
         [[ -d "$RALPHS_DIR/prompts" ]] && cp -r "$RALPHS_DIR/prompts/"* "$worktree_path/.ralphs/prompts/" 2>/dev/null || true
     fi
 
@@ -201,7 +203,7 @@ cmd_list() {
 
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session not found"
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     local registry="$PROJECT_ROOT/$PANE_REGISTRY_FILE"
@@ -241,7 +243,7 @@ cmd_list() {
                     local uptime
     uptime=$(duration_since "$started")
                     printf "%-12s %-12s %-12s %-10s\n" "$pane" "$role" "${ticket:-—}" "$uptime"
-                done < <(cat "$registry" | tr ',' '\n')
+                done < <(tr ',' '\n' < "$registry")
             fi
             echo ""
             ;;
@@ -252,7 +254,7 @@ cmd_list() {
 cmd_kill() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs kill <pane-id> [--release-ticket]"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local pane_id="$1"
@@ -276,7 +278,7 @@ cmd_kill() {
 
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session not found"
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Find pane in registry
@@ -329,7 +331,7 @@ cmd_kill() {
 cmd_ping() {
     if [[ $# -lt 2 ]]; then
         error "Usage: ralphs ping <pane-id> <message>"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local pane_id="$1"
@@ -341,7 +343,7 @@ cmd_ping() {
 
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session not found"
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Find pane by title

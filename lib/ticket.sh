@@ -115,7 +115,7 @@ cmd_ticket() {
     if [[ $# -eq 0 ]]; then
         error "Usage: ralphs ticket <subcommand>"
         echo "Subcommands: create, list, show, ready, blocked, tree, claim, transition, edit, feedback"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local subcmd="$1"
@@ -157,7 +157,7 @@ cmd_ticket() {
             ;;
         *)
             error "Unknown subcommand: $subcmd"
-            exit $EXIT_INVALID_ARGS
+            exit "$EXIT_INVALID_ARGS"
             ;;
     esac
 }
@@ -166,7 +166,7 @@ cmd_ticket() {
 ticket_create() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs ticket create <title> [--type TYPE] [--priority N] [--dep ID]"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local title="$1"
@@ -199,6 +199,7 @@ ticket_create() {
     require_project
 
     # Sync before write operation (only for clones)
+    # shellcheck disable=SC2015
     has_ticket_clone && ticket_sync_pull 2>/dev/null || true
 
     # Generate ticket ID
@@ -322,11 +323,11 @@ ticket_list() {
 ticket_show() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs ticket show <id>"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local id
-    id=$(resolve_ticket_id "$1") || exit $EXIT_TICKET_NOT_FOUND
+    id=$(resolve_ticket_id "$1") || exit "$EXIT_TICKET_NOT_FOUND"
     require_project
 
     # Sync before read operation
@@ -335,7 +336,7 @@ ticket_show() {
     local ticket_path="$TICKETS_DIR/${id}.md"
     if [[ ! -f "$ticket_path" ]]; then
         error "Ticket not found: $id"
-        exit $EXIT_TICKET_NOT_FOUND
+        exit "$EXIT_TICKET_NOT_FOUND"
     fi
 
     cat "$ticket_path"
@@ -442,11 +443,11 @@ ticket_blocked() {
 ticket_tree() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs ticket tree <id>"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local id
-    id=$(resolve_ticket_id "$1") || exit $EXIT_TICKET_NOT_FOUND
+    id=$(resolve_ticket_id "$1") || exit "$EXIT_TICKET_NOT_FOUND"
     require_project
 
     # Sync before read operation
@@ -494,11 +495,11 @@ _print_tree() {
 ticket_claim() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs ticket claim <id>"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local id
-    id=$(resolve_ticket_id "$1") || exit $EXIT_TICKET_NOT_FOUND
+    id=$(resolve_ticket_id "$1") || exit "$EXIT_TICKET_NOT_FOUND"
     require_project
 
     # Sync before write operation
@@ -510,7 +511,7 @@ ticket_claim() {
 
     if [[ "$current_state" != "ready" ]]; then
         error "Cannot claim ticket in state: $current_state"
-        exit $EXIT_INVALID_TRANSITION
+        exit "$EXIT_INVALID_TRANSITION"
     fi
 
     set_frontmatter_value "$ticket_path" "state" "claimed"
@@ -528,11 +529,11 @@ ticket_claim() {
 ticket_transition() {
     if [[ $# -lt 2 ]]; then
         error "Usage: ralphs ticket transition <id> <state> [--no-hooks] [--no-sync]"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local id
-    id=$(resolve_ticket_id "$1") || exit $EXIT_TICKET_NOT_FOUND
+    id=$(resolve_ticket_id "$1") || exit "$EXIT_TICKET_NOT_FOUND"
     local new_state="$2"
     shift 2
 
@@ -557,6 +558,7 @@ ticket_transition() {
     require_project
 
     # Sync before write operation
+    # shellcheck disable=SC2015
     [[ "$no_sync" != "true" ]] && ticket_sync_pull 2>/dev/null || true
 
     local ticket_path="$TICKETS_DIR/${id}.md"
@@ -572,7 +574,7 @@ ticket_transition() {
     if [[ "$valid" != "true" ]]; then
         error "Invalid state: $new_state"
         error "Valid states: ${VALID_STATES[*]}"
-        exit $EXIT_INVALID_TRANSITION
+        exit "$EXIT_INVALID_TRANSITION"
     fi
 
     # Check transition is allowed (space-delimited list)
@@ -580,7 +582,7 @@ ticket_transition() {
     if [[ ! " $allowed " == *" $new_state "* ]]; then
         error "Cannot transition from '$current_state' to '$new_state'"
         error "Allowed transitions from '$current_state': $allowed"
-        exit $EXIT_INVALID_TRANSITION
+        exit "$EXIT_INVALID_TRANSITION"
     fi
 
     # Update state
@@ -626,6 +628,7 @@ ticket_transition() {
     fi
 
     # Sync after write operation
+    # shellcheck disable=SC2015
     [[ "$no_sync" != "true" ]] && ticket_sync_push "Transition $id: $current_state → $new_state" 2>/dev/null || true
 
     success "Transitioned $id: $current_state -> $new_state"
@@ -635,11 +638,11 @@ ticket_transition() {
 ticket_edit() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs ticket edit <id>"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local id
-    id=$(resolve_ticket_id "$1") || exit $EXIT_TICKET_NOT_FOUND
+    id=$(resolve_ticket_id "$1") || exit "$EXIT_TICKET_NOT_FOUND"
     require_project
     load_config
 
@@ -651,11 +654,11 @@ ticket_edit() {
 ticket_feedback() {
     if [[ $# -lt 3 ]]; then
         error "Usage: ralphs ticket feedback <id> <source> <message>"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local id
-    id=$(resolve_ticket_id "$1") || exit $EXIT_TICKET_NOT_FOUND
+    id=$(resolve_ticket_id "$1") || exit "$EXIT_TICKET_NOT_FOUND"
     local source="$2"
     shift 2
     local message="$*"

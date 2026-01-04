@@ -65,7 +65,7 @@ cmd_status() {
             fi
 
             printf "  %-12s %-12s %-12s %-10s\n" "$pane" "${ticket:-—}" "${state:-—}" "$uptime"
-        done < <(cat "$registry" | tr ',' '\n')
+        done < <(tr ',' '\n' < "$registry")
     else
         echo "  (no workers)"
     fi
@@ -100,7 +100,7 @@ cmd_status() {
 cmd_fetch() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs fetch <pane-id> [prompt]"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local pane_id="$1"
@@ -112,7 +112,7 @@ cmd_fetch() {
 
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session not found"
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Find pane by title or index
@@ -133,7 +133,7 @@ cmd_fetch() {
 
     if [[ -z "$target_pane" ]]; then
         error "Pane not found: $pane_id"
-        exit $EXIT_PANE_NOT_FOUND
+        exit "$EXIT_PANE_NOT_FOUND"
     fi
 
     # Capture pane output
@@ -154,7 +154,7 @@ cmd_fetch() {
     fi
 
     if [[ -n "$ticket_id" ]] && [[ -f "$TICKETS_DIR/${ticket_id}.md" ]]; then
-        ticket_content=$(cat "$TICKETS_DIR/${ticket_id}.md")
+        ticket_content=$(<"$TICKETS_DIR/${ticket_id}.md")
     fi
 
     # Build context for ephemeral agent
@@ -215,7 +215,7 @@ cmd_digest() {
 
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session not found"
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Build context
@@ -247,7 +247,7 @@ cmd_digest() {
             fi
             context="$context
 "
-        done < <(cat "$registry" | tr ',' '\n')
+        done < <(tr ',' '\n' < "$registry")
     fi
 
     # Add ticket summary
@@ -288,7 +288,7 @@ Provide a brief executive summary.
 cmd_logs() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs logs <pane-id> [--tail N] [--follow]"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local pane_id="$1"
@@ -317,7 +317,7 @@ cmd_logs() {
 
     if ! session_exists "$RALPHS_SESSION"; then
         error "Session not found"
-        exit $EXIT_SESSION_NOT_FOUND
+        exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
     # Find pane
@@ -338,7 +338,7 @@ cmd_logs() {
 
     if [[ -z "$target_pane" ]]; then
         error "Pane not found: $pane_id"
-        exit $EXIT_PANE_NOT_FOUND
+        exit "$EXIT_PANE_NOT_FOUND"
     fi
 
     if [[ "$follow" == "true" ]]; then
@@ -359,11 +359,11 @@ cmd_logs() {
 cmd_context() {
     if [[ $# -lt 1 ]]; then
         error "Usage: ralphs context <ticket-id> [prompt]"
-        exit $EXIT_INVALID_ARGS
+        exit "$EXIT_INVALID_ARGS"
     fi
 
     local id
-    id=$(resolve_ticket_id "$1") || exit $EXIT_TICKET_NOT_FOUND
+    id=$(resolve_ticket_id "$1") || exit "$EXIT_TICKET_NOT_FOUND"
     shift
     local prompt="${*:-Provide a full briefing for working on this ticket.}"
 
@@ -377,7 +377,7 @@ cmd_context() {
 
 ## Ticket Content
 
-$(cat "$ticket_path")
+$(<"$ticket_path")
 
 "
 

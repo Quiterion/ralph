@@ -116,25 +116,13 @@ cmd_fetch() {
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
-    # Find pane by title or index
-    local target_pane=""
-    local panes
-    panes=$(tmux list-panes -t "$WIGGUM_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
-
-    while IFS= read -r line; do
-        local idx
-    idx=$(echo "$line" | awk '{print $1}')
-        local title
-    title=$(echo "$line" | awk '{print $2}')
-        if [[ "$title" == "$pane_id" ]] || [[ "$idx" == "$pane_id" ]]; then
-            target_pane="$idx"
-            break
-        fi
-    done <<< "$panes"
+    # Look up pane index from registry
+    local target_pane
+    target_pane=$(get_pane_tmux_index "$pane_id")
 
     if [[ -z "$target_pane" ]]; then
-        error "Pane not found: $pane_id"
-        exit "$EXIT_PANE_NOT_FOUND"
+        # Fallback to direct index
+        target_pane="$pane_id"
     fi
 
     # Capture pane output
@@ -320,25 +308,13 @@ cmd_logs() {
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
-    # Find pane
-    local target_pane=""
-    local panes
-    panes=$(tmux list-panes -t "$WIGGUM_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
-
-    while IFS= read -r line; do
-        local idx
-    idx=$(echo "$line" | awk '{print $1}')
-        local title
-    title=$(echo "$line" | awk '{print $2}')
-        if [[ "$title" == "$pane_id" ]] || [[ "$idx" == "$pane_id" ]]; then
-            target_pane="$idx"
-            break
-        fi
-    done <<< "$panes"
+    # Look up pane index from registry
+    local target_pane
+    target_pane=$(get_pane_tmux_index "$pane_id")
 
     if [[ -z "$target_pane" ]]; then
-        error "Pane not found: $pane_id"
-        exit "$EXIT_PANE_NOT_FOUND"
+        # Fallback to direct index
+        target_pane="$pane_id"
     fi
 
     if [[ "$follow" == "true" ]]; then

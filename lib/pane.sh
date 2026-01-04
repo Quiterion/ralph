@@ -55,6 +55,7 @@ register_pane() {
     local pane_id="$1"
     local role="$2"
     local ticket_id="${3:-}"
+    local tmux_index="${4:-}"
 
     require_project
     local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
@@ -66,7 +67,7 @@ register_pane() {
 
     local now
     now=$(timestamp)
-    local entry="{\"pane\": \"$pane_id\", \"role\": \"$role\", \"ticket\": \"$ticket_id\", \"started_at\": \"$now\"}"
+    local entry="{\"pane\": \"$pane_id\", \"role\": \"$role\", \"ticket\": \"$ticket_id\", \"tmux_index\": \"$tmux_index\", \"started_at\": \"$now\"}"
 
     # Add to registry (simple append approach)
     local content
@@ -101,6 +102,22 @@ unregister_pane() {
         mv "$temp" "$registry"
     fi
     rm -f "$temp"
+}
+
+# Look up tmux pane index from registry by agent name
+# Usage: get_pane_tmux_index <pane-name>
+# Returns: tmux pane index or empty string if not found
+get_pane_tmux_index() {
+    local pane_name="$1"
+    local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
+
+    [[ -f "$registry" ]] || return 0
+
+    local entry
+    entry=$(grep "\"pane\": \"$pane_name\"" "$registry" 2>/dev/null || true)
+    if [[ -n "$entry" ]]; then
+        echo "$entry" | grep -o '"tmux_index": "[^"]*"' | cut -d'"' -f4
+    fi
 }
 
 # Build a prompt for an agent based on role and ticket
@@ -272,7 +289,7 @@ cmd_spawn() {
     tmux select-layout -t "$WIGGUM_SESSION:main" "$WIGGUM_LAYOUT" 2>/dev/null || true
 
     # Register the pane
-    register_pane "$pane_name" "$role" "$ticket_id"
+    register_pane "$pane_name" "$role" "$ticket_id" "$new_pane"
 
     # Start work on ticket if it's ready (assigning a ticket to any agent starts it)
     if [[ -n "$ticket_id" ]]; then
@@ -410,34 +427,21 @@ cmd_kill() {
     # Find pane in registry
     local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
     local ticket_id=""
+    local target_pane=""
 
     if [[ -f "$registry" ]]; then
         local entry
-    entry=$(grep "\"pane\": \"$pane_id\"" "$registry" || true)
+        entry=$(grep "\"pane\": \"$pane_id\"" "$registry" || true)
         if [[ -n "$entry" ]]; then
             ticket_id=$(echo "$entry" | grep -o '"ticket": "[^"]*"' | cut -d'"' -f4)
+            target_pane=$(echo "$entry" | grep -o '"tmux_index": "[^"]*"' | cut -d'"' -f4)
         fi
     fi
 
-    # Find and kill the tmux pane by title
-    local panes
-    panes=$(tmux list-panes -t "$WIGGUM_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
-    local target_pane=""
-
-    while IFS= read -r line; do
-        local idx
-    idx=$(echo "$line" | awk '{print $1}')
-        local title
-    title=$(echo "$line" | awk '{print $2}')
-        if [[ "$title" == "$pane_id" ]]; then
-            target_pane="$idx"
-            break
-        fi
-    done <<< "$panes"
-
+    # Kill the tmux pane by stored index
     if [[ -n "$target_pane" ]]; then
-        tmux kill-pane -t "$WIGGUM_SESSION:main.$target_pane"
-        info "Killed tmux pane"
+        tmux kill-pane -t "$WIGGUM_SESSION:main.$target_pane" 2>/dev/null && \
+            info "Killed tmux pane"
     fi
 
     # Unregister
@@ -472,24 +476,12 @@ cmd_ping() {
         exit "$EXIT_SESSION_NOT_FOUND"
     fi
 
-    # Find pane by title
-    local panes
-    panes=$(tmux list-panes -t "$WIGGUM_SESSION:main" -F '#{pane_index} #{pane_title}' 2>/dev/null)
-    local target_pane=""
-
-    while IFS= read -r line; do
-        local idx
-    idx=$(echo "$line" | awk '{print $1}')
-        local title
-    title=$(echo "$line" | awk '{print $2}')
-        if [[ "$title" == "$pane_id" ]]; then
-            target_pane="$idx"
-            break
-        fi
-    done <<< "$panes"
+    # Look up pane index from registry
+    local target_pane
+    target_pane=$(get_pane_tmux_index "$pane_id")
 
     if [[ -z "$target_pane" ]]; then
-        # Try direct index
+        # Fallback to direct index if not in registry
         target_pane="$pane_id"
     fi
 

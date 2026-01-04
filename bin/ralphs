@@ -11,7 +11,16 @@
 set -euo pipefail
 
 RALPHS_VERSION="0.1.0"
-RALPHS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Resolve symlinks to find the real script location
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    # Handle relative symlinks
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+RALPHS_ROOT="$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)"
 RALPHS_LIB="$RALPHS_ROOT/lib"
 export RALPHS_DEFAULTS="$RALPHS_ROOT/defaults"
 

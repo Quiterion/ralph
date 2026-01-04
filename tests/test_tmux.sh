@@ -149,9 +149,9 @@ test_list_panes_json_format() {
     local output
     output=$("$WIGGUM_BIN" list --format json)
 
-    # Should be valid JSON array
-    if [[ "$output" != "[]" && "$output" != *"["* ]]; then
-        echo "JSON format should return array, got: $output"
+    # Should be valid JSON object
+    if [[ "$output" != "{}" && "$output" != *"{"* ]]; then
+        echo "JSON format should return object, got: $output"
         return 1
     fi
 

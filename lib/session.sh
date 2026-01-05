@@ -67,7 +67,7 @@ cmd_init() {
     # Add to .gitignore
     local gitignore=".gitignore"
     [[ -f "$gitignore" ]] || touch "$gitignore"
-    local entries=(".wiggum/tickets.git/" ".wiggum/tickets/" "worktrees/")
+    local entries=(".wiggum/" "worktrees/")
     for entry in "${entries[@]}"; do
         if ! grep -qxF "$entry" "$gitignore" 2>/dev/null; then
             echo "$entry" >>"$gitignore"

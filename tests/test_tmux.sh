@@ -212,6 +212,65 @@ test_teardown_fails_no_session() {
     fi
 }
 
+test_teardown_cleans_up_worktrees_and_branches() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    local session
+    session=$(test_session_name)
+    export WIGGUM_SESSION="$session"
+    trap "cleanup_test_session '$session'" RETURN
+
+    "$WIGGUM_BIN" init
+
+    # Need at least one commit for worktree to work
+    touch README.md
+    git add README.md
+    git commit -m "Initial commit" &>/dev/null
+
+    # Create a ticket and spawn a worker
+    "$WIGGUM_BIN" ticket create "Test ticket" &>/dev/null
+    local ticket_id
+    ticket_id=$("$WIGGUM_BIN" ticket ready | head -n 1)
+
+    if [[ -z "$ticket_id" ]]; then
+        echo "Failed to create ticket"
+        return 1
+    fi
+
+    local agent_id
+    agent_id=$("$WIGGUM_BIN" --quiet spawn worker "$ticket_id" | tail -n 1)
+
+    if [[ -z "$agent_id" ]]; then
+        echo "Failed to spawn agent"
+        return 1
+    fi
+
+    # Verify worktree exists
+    local worktree_path="worktrees/$agent_id"
+    assert_dir_exists "$worktree_path" "Worktree should exist after spawn"
+
+    # Verify branch exists
+    if ! git rev-parse --verify "$agent_id" &>/dev/null; then
+        echo "Branch $agent_id should exist after spawn"
+        return 1
+    fi
+
+    # Teardown the session
+    "$WIGGUM_BIN" --verbose teardown --force
+
+    # Verify worktree is gone
+    assert_not_exists "$worktree_path" "Worktree should be removed after teardown"
+
+    # Verify branch is gone
+    if git rev-parse --verify "$agent_id" &>/dev/null; then
+        echo "Branch $agent_id should be removed after teardown"
+        return 1
+    fi
+}
+
 #
 # Test list
 #
@@ -220,6 +279,7 @@ TMUX_TESTS=(
     "Tmux spawn creates session:test_spawn_creates_session"
     "Tmux spawn session idempotent:test_spawn_session_idempotent"
     "Tmux teardown kills session:test_teardown_kills_session"
+    "Tmux teardown cleans up worktrees and branches:test_teardown_cleans_up_worktrees_and_branches"
     "Tmux list panes empty:test_list_panes_empty"
     "Tmux list panes json:test_list_panes_json_format"
     "Tmux status shows overview:test_status_shows_overview"

@@ -205,10 +205,48 @@ cmd_teardown() {
     fi
 
     info "Tearing down session: $WIGGUM_SESSION"
+
+    # Clean up worktrees and branches for all agents (same as cmd_kill)
+    local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
+    if [[ -f "$registry" ]] && command -v jq &>/dev/null; then
+        local agent_ids
+        agent_ids=$(jq -r 'keys[]' "$registry" 2>/dev/null || true)
+        for agent_id in $agent_ids; do
+            # Clean up worktree
+            local worktree_path="$MAIN_PROJECT_ROOT/worktrees/$agent_id"
+            if [[ -d "$worktree_path" ]]; then
+                info "Cleaning up worktree for $agent_id..."
+
+                # Remove untracked files created by wiggum
+                [[ -d "$worktree_path/.wiggum" ]] && rm -rf "$worktree_path/.wiggum"
+                [[ -L "$worktree_path/.claude" ]] && rm -f "$worktree_path/.claude"
+                [[ -d "$worktree_path/.claude" ]] && rm -rf "$worktree_path/.claude"
+
+                local wt_args=()
+                [[ "$force" == "true" ]] && wt_args+=("--force")
+
+                if ! git worktree remove "${wt_args[@]}" "$worktree_path" 2>/dev/null; then
+                    debug "Failed to remove worktree: $worktree_path"
+                fi
+            fi
+
+            # Clean up branch
+            if git rev-parse --verify "$agent_id" &>/dev/null; then
+                info "Cleaning up branch $agent_id..."
+                local branch_args=("-d")
+                [[ "$force" == "true" ]] && branch_args=("-D")
+
+                if ! git branch "${branch_args[@]}" "$agent_id" 2>/dev/null; then
+                    debug "Failed to delete branch $agent_id"
+                fi
+            fi
+        done
+    fi
+
+    # Kill the tmux session
     tmux kill-session -t "$WIGGUM_SESSION"
 
     # Clear the pane registry
-    local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
     if [[ -f "$registry" ]]; then
         echo "{}" >"$registry"
     fi

@@ -918,9 +918,9 @@ branch_merge() {
         exit "$EXIT_ERROR"
     fi
 
-    # Get the main branch name
+    # Get the main branch name (handle missing origin gracefully)
     local main_branch
-    main_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+    main_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || true)
     [[ -z "$main_branch" ]] && main_branch="main"
 
     # Save current branch

@@ -212,6 +212,82 @@ test_teardown_fails_no_session() {
     fi
 }
 
+test_send_keys_requires_args() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    local session
+    session=$(test_session_name)
+    export WIGGUM_SESSION="$session"
+    trap "cleanup_test_session '$session'" RETURN
+
+    "$WIGGUM_BIN" init
+
+    # send-keys with no args should fail
+    if "$WIGGUM_BIN" send-keys 2>/dev/null; then
+        echo "send-keys should require agent-id and keys"
+        return 1
+    fi
+
+    # send-keys with only agent-id should fail
+    if "$WIGGUM_BIN" send-keys worker-0 2>/dev/null; then
+        echo "send-keys should require keys argument"
+        return 1
+    fi
+}
+
+test_send_keys_agent_not_found() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    local session
+    session=$(test_session_name)
+    export WIGGUM_SESSION="$session"
+    trap "cleanup_test_session '$session'" RETURN
+
+    "$WIGGUM_BIN" init
+    "$WIGGUM_BIN" spawn supervisor &>/dev/null
+
+    # send-keys to non-existent agent should fail
+    if "$WIGGUM_BIN" send-keys nonexistent-0 "test keys" 2>/dev/null; then
+        echo "send-keys should fail for non-existent agent"
+        return 1
+    fi
+
+    cleanup_test_session "$session"
+}
+
+test_send_keys_to_agent() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    local session
+    session=$(test_session_name)
+    export WIGGUM_SESSION="$session"
+    trap "cleanup_test_session '$session'" RETURN
+
+    "$WIGGUM_BIN" init
+    "$WIGGUM_BIN" spawn supervisor &>/dev/null
+
+    # send-keys to supervisor should succeed
+    local output
+    if ! output=$("$WIGGUM_BIN" send-keys supervisor-0 "test keys" 2>&1); then
+        echo "send-keys should succeed for existing agent"
+        echo "Output: $output"
+        return 1
+    fi
+
+    assert_contains "$output" "Sent keys" "Should show success message"
+
+    cleanup_test_session "$session"
+}
+
 #
 # Test list
 #
@@ -225,6 +301,9 @@ TMUX_TESTS=(
     "Tmux status shows overview:test_status_shows_overview"
     "Tmux attach fails no session:test_attach_fails_no_session"
     "Tmux teardown fails no session:test_teardown_fails_no_session"
+    "Tmux send-keys requires args:test_send_keys_requires_args"
+    "Tmux send-keys agent not found:test_send_keys_agent_not_found"
+    "Tmux send-keys to agent:test_send_keys_to_agent"
 )
 
 # Run if executed directly

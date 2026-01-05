@@ -39,9 +39,9 @@ See [tickets.md](./tickets.md#sync--distribution) for details on the git hook in
 | `on-claim` | Ticket in-progress by worker | Log, notify, setup |
 | `on-draft-done` | Worker finishes implementation | Spawn reviewer |
 | `on-review-done` | Reviewer approves | Spawn QA agent |
-| `on-review-rejected` | Reviewer rejects | Inject feedback, ping worker |
-| `on-qa-done` | QA passes | Close ticket |
-| `on-qa-rejected` | QA fails | Inject feedback, reopen for worker |
+| `on-review-rejected` | Reviewer rejects | Ping worker |
+| `on-qa-done` | QA passes | Pings supervisor (todo) |
+| `on-qa-rejected` | QA fails | Ping worker |
 | `on-close` | Ticket closed | Cleanup, metrics, maybe tag release |
 
 ---
@@ -87,7 +87,7 @@ wiggum spawn reviewer "$TICKET_ID"
 
 ### on-review-rejected
 
-Inject feedback and ping the worker:
+Ping the worker:
 
 ```bash
 #!/bin/bash
@@ -98,12 +98,9 @@ AGENT_ID="$WIGGUM_AGENT_ID"
 
 echo "[hook] Review rejected for $TICKET_ID"
 
-# Transition back to in-progress
-wiggum ticket transition "$TICKET_ID" in-progress
-
 # Ping the original worker (if still running)
 if [[ -n "$AGENT_ID" ]]; then
-  wiggum ping "$AGENT_ID" "Review feedback added to your ticket. Please address."
+  wiggum ping "$AGENT_ID" "Review comment added to your ticket. Please address."
 fi
 ```
 
@@ -163,7 +160,6 @@ Hooks are executed by wiggum when state transitions occur:
 3. wiggum updates the ticket file
 4. wiggum executes the appropriate hook (if present)
 5. Hook runs with full context available
-6. Transition completes when hook script exits
 
 ### Synchronous Script, Asynchronous Agents
 

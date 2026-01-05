@@ -28,7 +28,7 @@ The underlying `tk` CLI is vendored and available, but users interact via `wiggu
                           ▲               │              │
                           │               │              │
                           └───────────────┴──────────────┘
-                                 (feedback)              │
+                                  (comment)              │
                                                          ▼
                                                     ┌────────┐
                                                     │  done  │
@@ -97,7 +97,7 @@ Add JWT-based authentication middleware to the API routes.
 - [ ] Invalid tokens return 401
 - [ ] Token payload available in request context
 
-## Feedback
+## Comment
 
 ### From Review (2025-07-14 14:30)
 
@@ -134,12 +134,12 @@ wiggum ticket tree tk-5c46   # Show dependency tree
 
 ---
 
-## Feedback Injection
+## Comment Injection
 
-When review or QA fails, feedback is appended to the ticket:
+When review or QA fails, comment is appended to the ticket:
 
 ```yaml
-## Feedback
+## Comment
 
 ### From Review (2025-07-14 14:30)
 
@@ -151,10 +151,10 @@ The ticket state returns to `in-progress`, and the assigned worker is pinged:
 
 ```bash
 # Happens automatically via hook
-tmux send-keys -t worker-0 "# Review feedback added. Please address and re-submit." Enter
+tmux send-keys -t worker-0 "# Review comment added. Please address and re-submit." Enter
 ```
 
-The worker's next loop reads the ticket, sees feedback, addresses it.
+The worker's next loop reads the ticket, sees comment, addresses it.
 
 ---
 
@@ -178,7 +178,7 @@ wiggum ticket transition <id> <state>   # Change ticket state
 
 # Edit
 wiggum ticket edit <id>         # Open in $EDITOR
-wiggum ticket feedback <id> <source> <message>   # Append feedback
+wiggum ticket comment <id> <source> <message>   # Append comment
 
 # Sync (for distributed mode)
 wiggum ticket sync              # Pull + push
@@ -284,7 +284,7 @@ agent edits ticket → commits → pushes
 
 Ticket commands auto-sync by default:
 - **Read ops** (`show`, `list`, `ready`) — pull first
-- **Write ops** (`create`, `transition`, `feedback`) — pull, act, push
+- **Write ops** (`create`, `transition`, `comment`) — pull, act, push
 
 Disable with `WIGGUM_AUTO_SYNC=false` or `--no-sync` flag.
 

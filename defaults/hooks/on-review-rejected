@@ -2,7 +2,7 @@
 #
 # on-review-rejected - Triggered when review rejects changes
 #
-# Pings the implementer to address feedback.
+# Pings the worker to address review comment.
 #
 # Environment:
 #   WIGGUM_TICKET_ID    - The ticket ID
@@ -17,10 +17,10 @@ TICKET_ID="${1:-$WIGGUM_TICKET_ID}"
 
 echo "[hook] Review rejected for $TICKET_ID"
 
-# Get the assigned implementer agent
-IMPL_AGENT=$(grep 'assigned_agent_id:' "$WIGGUM_TICKET_PATH" | awk '{print $2}')
+# Get the assigned worker agent
+WORK_AGENT=$(grep 'assigned_agent_id:' "$WIGGUM_TICKET_PATH" | awk '{print $2}')
 
 # Ping the implementer if still running
-if [[ -n "$IMPL_AGENT" ]]; then
-    wiggum ping "$IMPL_AGENT" "Review feedback added to your ticket. Please address and re-submit." 2>/dev/null || true
+if [[ -n "$WORK_AGENT" ]]; then
+    wiggum ping "$WORK_AGENT" "Review comment added to your ticket. Please address and re-submit." || true
 fi

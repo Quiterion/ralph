@@ -52,14 +52,14 @@ wiggum ticket transition {TICKET_ID} done
 Something is wrong. Be specific about what failed:
 
 ```bash
-# Add specific feedback about failures
-wiggum ticket feedback {TICKET_ID} qa "Your feedback here"
+# Add specific comment about failures
+wiggum ticket comment {TICKET_ID} qa "Your comment here"
 
 # Return to worker
-wiggum ticket transition {TICKET_ID} implement
+wiggum ticket transition {TICKET_ID} in-progress
 ```
 
-### Example QA Feedback
+### Example QA comment
 
 - "Test suite has 3 failures in auth.test.ts"
 - "Build fails with TypeScript error on line 120"

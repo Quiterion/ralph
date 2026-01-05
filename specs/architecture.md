@@ -41,7 +41,7 @@
 | **tmux** | Process isolation, pane lifecycle, attach/detach, log capture |
 | **tickets** | Task state, dependencies, unified state machine |
 | **hooks** | Trigger pipeline stages on ticket state transitions |
-| **tools** | Summarization, feedback injection, context building |
+| **tools** | Summarization, comment injection, context building |
 | **prompts** | Role-specific agent instructions |
 
 ---
@@ -130,7 +130,7 @@ Workers are **focused executors**. Each worker:
 2. Works on the task described
 3. Updates the ticket with progress/notes
 4. Signals completion (state transition triggers hooks)
-5. Addresses feedback if ticket returns to them
+5. Addresses comment if ticket returns to them
 
 Workers don't know about other workers. They focus on their ticket.
 

@@ -81,7 +81,7 @@ Ticket Management:
   ticket assign <id> <agent>    Assign agent to ticket
   ticket unassign <id>          Remove agent assignment
   ticket edit <id>              Edit ticket in \$EDITOR
-  ticket feedback <id> <src> <msg>  Add feedback
+  ticket comment <id> <src> <msg>  Add comment
   ticket sync [--pull|--push]   Sync tickets with origin
 
 Global Options:

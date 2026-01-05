@@ -47,7 +47,7 @@ write_ticket() {
 
     #if has_ticket_clone; then
     echo "$content" >"$TICKETS_DIR/${id}.md"
-    ticket_sync_push "$commit_msg" || true
+    ticket_sync_push "$commit_msg" || warn "Failed to push ticket changes"
     #else
     #    bare_write_ticket "${id}.md" "$content" "$commit_msg"
     #fi
@@ -113,7 +113,7 @@ declare -A TRANSITIONS=(
 cmd_ticket() {
     if [[ $# -eq 0 ]]; then
         error "Usage: wiggum ticket <subcommand>"
-        echo "Subcommands: create, list, show, ready, blocked, tree, transition, assign, unassign, edit, feedback"
+        echo "Subcommands: create, list, show, ready, blocked, tree, transition, assign, unassign, edit, comment"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -145,8 +145,8 @@ cmd_ticket() {
         edit)
             ticket_edit "$@"
             ;;
-        feedback)
-            ticket_feedback "$@"
+        comment)
+            ticket_comment "$@"
             ;;
         assign)
             ticket_assign "$@"
@@ -247,9 +247,7 @@ created_by: manual
 
 - [ ] [Add criteria]
 
-## Feedback
-
-## Notes
+## Comments
 "
 
     # Write ticket using abstraction
@@ -286,7 +284,7 @@ ticket_list() {
     require_project
 
     # Sync before read operation
-    ticket_sync_pull || true
+    ticket_sync_pull || warn "Failed to pull ticket changes"
 
     echo ""
     printf "${BOLD}%-10s %-10s %-10s %-3s %-40s${NC}\n" "ID" "STATE" "TYPE" "PRI" "TITLE"
@@ -333,7 +331,7 @@ ticket_show() {
     require_project
 
     # Sync before read operation
-    ticket_sync_pull || true
+    ticket_sync_pull || warn "Failed to pull ticket changes"
 
     local ticket_path="$TICKETS_DIR/${id}.md"
     if [[ ! -f "$ticket_path" ]]; then
@@ -363,7 +361,7 @@ ticket_ready() {
     require_project
 
     # Sync before read operation
-    ticket_sync_pull || true
+    ticket_sync_pull || warn "Failed to pull ticket changes"
 
     local count=0
     for ticket_file in "$TICKETS_DIR"/*.md; do
@@ -407,7 +405,7 @@ ticket_blocked() {
     require_project
 
     # Sync before read operation
-    ticket_sync_pull || true
+    ticket_sync_pull || warn "Failed to pull ticket changes"
 
     for ticket_file in "$TICKETS_DIR"/*.md; do
         [[ -f "$ticket_file" ]] || continue
@@ -453,7 +451,7 @@ ticket_tree() {
     require_project
 
     # Sync before read operation
-    ticket_sync_pull || true
+    ticket_sync_pull || warn "Failed to pull ticket changes"
 
     _print_tree "$id" 0
 }
@@ -577,10 +575,10 @@ ticket_edit() {
     ${WIGGUM_EDITOR} "$ticket_path"
 }
 
-# Add feedback to ticket
-ticket_feedback() {
+# Add comment to ticket
+ticket_comment() {
     if [[ $# -lt 3 ]]; then
-        error "Usage: wiggum ticket feedback <id> <source> <message>"
+        error "Usage: wiggum ticket comment <id> <source> <message>"
         exit "$EXIT_INVALID_ARGS"
     fi
 
@@ -593,25 +591,25 @@ ticket_feedback() {
     require_project
 
     # Sync before write operation
-    ticket_sync_pull || true
+    ticket_sync_pull || warn "Failed to pull ticket changes"
 
     local ticket_path="$TICKETS_DIR/${id}.md"
 
-    # Append feedback to ticket
-    local feedback_entry
-    feedback_entry="
+    # Append comment to ticket
+    local comment_entry
+    comment_entry="
 ### From $source ($(human_timestamp))
 
 $message
 "
 
-    # Find the ## Feedback section and append after it
+    # Find the ## Comments section and append after it
     local temp
     temp=$(mktemp)
-    awk -v feedback="$feedback_entry" '
-        /^## Feedback/ {
+    awk -v comment="$comment_entry" '
+        /^## Comments/ {
             print
-            print feedback
+            print comment
             next
         }
         { print }
@@ -619,7 +617,7 @@ $message
     mv "$temp" "$ticket_path"
 
     # Sync after write operation
-    ticket_sync_push "Feedback on $id from $source" || true
+    ticket_sync_push "Comments on $id from $source" || warn "Failed to push ticket changes"
 
     # Ping assigned agent if any
     local agent_id
@@ -630,12 +628,12 @@ $message
             local tmux_pane_id
             tmux_pane_id=$(get_tmux_pane_id "$agent_id")
             if [[ -n "$tmux_pane_id" ]]; then
-                send_pane_input "$tmux_pane_id" "# Feedback added to your ticket. Please address."
+                send_pane_input "$tmux_pane_id" "# Comments added to your ticket. Please address."
             fi
         fi
     fi
 
-    success "Added feedback to $id"
+    success "Added comment to $id"
 }
 
 # Assign an agent to a ticket
@@ -652,7 +650,7 @@ ticket_assign() {
     require_project
 
     # Sync before write operation
-    ticket_sync_pull || true
+    ticket_sync_pull || warn "Failed to pull ticket changes"
 
     local ticket_path="$TICKETS_DIR/${id}.md"
     if [[ ! -f "$ticket_path" ]]; then
@@ -665,7 +663,7 @@ ticket_assign() {
     set_frontmatter_value "$ticket_path" "assigned_at" "$(timestamp)"
 
     # Sync after write operation
-    ticket_sync_push "Assign $agent_id to $id" || true
+    ticket_sync_push "Assign $agent_id to $id" || warn "Failed to push ticket changes"
 
     success "Assigned $agent_id to $id"
 }
@@ -683,7 +681,7 @@ ticket_unassign() {
     require_project
 
     # Sync before write operation
-    ticket_sync_pull || true
+    ticket_sync_pull || warn "Failed to pull ticket changes"
 
     local ticket_path="$TICKETS_DIR/${id}.md"
     if [[ ! -f "$ticket_path" ]]; then
@@ -699,7 +697,7 @@ ticket_unassign() {
     set_frontmatter_value "$ticket_path" "assigned_at" ""
 
     # Sync after write operation
-    ticket_sync_push "Unassign $id" || true
+    ticket_sync_push "Unassign $id" || warn "Failed to push ticket changes"
 
     if [[ -n "$prev_agent" ]]; then
         success "Unassigned $prev_agent from $id"

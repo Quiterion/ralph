@@ -147,7 +147,7 @@ Sends the message as input to the pane, waking the agent.
 **Example:**
 
 ```bash
-wiggum ping worker-0 "Review feedback added to your ticket. Please address."
+wiggum ping worker-0 "Review comment added to your ticket. Please address."
 ```
 
 ---
@@ -307,24 +307,24 @@ wiggum ticket unassign tk-5c46
 
 These commands directly mutate the `assigned_agent_id` and `assigned_at` frontmatter fields. They do not change the ticket state—use `transition` for that. Useful for manual intervention or reassignment scenarios.
 
-### Feedback
+### Comment
 
 ```bash
-wiggum ticket feedback <id> <source> <message>
+wiggum ticket comment <id> <source> <message>
 ```
 
 **Arguments:**
 - `id` — Target ticket
-- `source` — Who's giving feedback (e.g., `reviewer`, `qa`)
-- `message` — The feedback content
+- `source` — Who's leaving the comment (e.g., `reviewer`, `qa`)
+- `message` — The comment content
 
 **Example:**
 
 ```bash
-wiggum ticket feedback tk-5c46 reviewer "Missing rate limiting. Add test for expired tokens."
+wiggum ticket comment tk-5c46 reviewer "Missing rate limiting. Add test for expired tokens."
 ```
 
-Appends feedback to the ticket and pings the assigned worker pane if one exists.
+Appends comment to the ticket and pings the assigned worker pane if one exists.
 
 ### Sync
 

@@ -340,34 +340,34 @@ test_ticket_tree_shows_deps() {
 }
 
 #
-# Tests: Ticket feedback
+# Tests: Ticket comment
 #
 
-test_ticket_feedback_appends() {
+test_ticket_comment_appends() {
     "$WIGGUM_BIN" init
     local ticket_id
-    ticket_id=$("$WIGGUM_BIN" ticket create "Feedback target")
+    ticket_id=$("$WIGGUM_BIN" ticket create "Comment target")
 
-    "$WIGGUM_BIN" ticket feedback "$ticket_id" reviewer "Looks good but needs tests"
+    "$WIGGUM_BIN" ticket comment "$ticket_id" reviewer "Looks good but needs tests"
 
     local content
     content=$(cat ".wiggum/tickets/${ticket_id}.md")
-    assert_contains "$content" "From reviewer" "Should show feedback source"
-    assert_contains "$content" "Looks good but needs tests" "Should show feedback message"
+    assert_contains "$content" "From reviewer" "Should show comment source"
+    assert_contains "$content" "Looks good but needs tests" "Should show comment message"
 }
 
-test_ticket_feedback_multiple() {
+test_ticket_comment_multiple() {
     "$WIGGUM_BIN" init
     local ticket_id
-    ticket_id=$("$WIGGUM_BIN" ticket create "Multiple feedback")
+    ticket_id=$("$WIGGUM_BIN" ticket create "Multiple comment")
 
-    "$WIGGUM_BIN" ticket feedback "$ticket_id" alice "First comment"
-    "$WIGGUM_BIN" ticket feedback "$ticket_id" bob "Second comment"
+    "$WIGGUM_BIN" ticket comment "$ticket_id" alice "First comment"
+    "$WIGGUM_BIN" ticket comment "$ticket_id" bob "Second comment"
 
     local content
     content=$(cat ".wiggum/tickets/${ticket_id}.md")
-    assert_contains "$content" "From alice" "Should show first feedback"
-    assert_contains "$content" "From bob" "Should show second feedback"
+    assert_contains "$content" "From alice" "Should show first comment"
+    assert_contains "$content" "From bob" "Should show second comment"
 }
 
 #
@@ -437,9 +437,9 @@ TICKET_TESTS=(
     # Tree
     "Ticket tree shows deps:test_ticket_tree_shows_deps"
 
-    # Feedback
-    "Ticket feedback appends:test_ticket_feedback_appends"
-    "Ticket feedback multiple:test_ticket_feedback_multiple"
+    # Comment
+    "Ticket comment appends:test_ticket_comment_appends"
+    "Ticket comment multiple:test_ticket_comment_multiple"
 
     # Utilities
     "Require project fails outside:test_require_project_fails_outside"

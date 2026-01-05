@@ -96,7 +96,7 @@ assigned to you.
 - Search before in-progressing (don't assume code doesn't exist)
 - Run tests after changes
 - If blocked, note it in your ticket
-- If you receive feedback, address it and re-submit
+- If you receive comment, address it and re-submit
 
 ## Completion
 
@@ -123,7 +123,7 @@ The critic. Reviews implementation for quality and correctness.
 # Reviewer
 
 You are a code review agent. Your job is to review the implementation
-for a ticket and provide feedback.
+for a ticket and provide comment.
 
 ## Your Ticket
 
@@ -153,10 +153,10 @@ wiggum ticket transition {TICKET_ID} qa
 
 ## If Rejecting
 
-Add specific, actionable feedback:
+Add specific, actionable comment:
 
 ```bash
-wiggum ticket feedback {TICKET_ID} reviewer "Your feedback here"
+wiggum ticket comment {TICKET_ID} reviewer "Your comment here"
 wiggum ticket transition {TICKET_ID} in-progress
 ```
 
@@ -208,10 +208,10 @@ wiggum ticket transition {TICKET_ID} done
 
 ## If Failing
 
-Add specific feedback about what failed:
+Add specific comment about what failed:
 
 ```bash
-wiggum ticket feedback {TICKET_ID} qa "Your feedback here"
+wiggum ticket comment {TICKET_ID} qa "Your comment here"
 wiggum ticket transition {TICKET_ID} in-progress
 ```
 
@@ -233,7 +233,7 @@ Prompts support these variables, replaced at spawn time:
 | `{RELEVANT_SPECS}` | Specs related to this ticket |
 | `{PROJECT_SPECS}` | All project specs (for supervisor) |
 | `{DEPENDENCIES}` | Summary of dependency tickets |
-| `{FEEDBACK}` | Any feedback from previous review/QA |
+| `{COMMENT}` | Any comment from previous review/QA |
 
 ---
 

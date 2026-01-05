@@ -41,12 +41,12 @@ cmd_status() {
         local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
 
         if [[ -f "$registry" ]] && command -v jq &>/dev/null; then
-            agent_count=$(jq 'length' "$registry" 2>/dev/null || echo 0)
+            agent_count=$(jq 'length' "$registry" || echo 0)
         fi
 
         for ticket_file in $(bare_list_tickets); do
             local s
-            s=$(bare_get_frontmatter_value "$ticket_file" "state" 2>/dev/null)
+            s=$(bare_get_frontmatter_value "$ticket_file" "state")
             [[ "$s" == "ready" ]] && ready_count=$((ready_count + 1))
         done
 
@@ -64,7 +64,7 @@ cmd_status() {
     fi
 
     local pane_count
-    pane_count=$(tmux list-panes -t "$WIGGUM_SESSION:main" 2>/dev/null | wc -l)
+    pane_count=$(tmux list-panes -t "$WIGGUM_SESSION:main" | wc -l)
     echo "  Panes: $pane_count"
     echo ""
 
@@ -73,7 +73,7 @@ cmd_status() {
     local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
     if [[ -f "$registry" ]] && [[ -s "$registry" ]] && command -v jq &>/dev/null; then
         local keys
-        keys=$(jq -r 'keys[]' "$registry" 2>/dev/null)
+        keys=$(jq -r 'keys[]' "$registry")
         if [[ -n "$keys" ]]; then
             for agent_id in $keys; do
                 local role started uptime ticket state
@@ -87,7 +87,7 @@ cmd_status() {
                 # Get ticket state if available (from bare repo)
                 state=""
                 if [[ -n "$ticket" ]]; then
-                    state=$(bare_get_frontmatter_value "${ticket}.md" "state" 2>/dev/null)
+                    state=$(bare_get_frontmatter_value "${ticket}.md" "state")
                 fi
 
                 printf "  %-12s %-12s %-12s %-10s\n" "$agent_id" "${ticket:-—}" "${state:-—}" "$uptime"
@@ -134,8 +134,8 @@ cmd_fetch() {
     fi
 
     local agent_id="$1"
-    shift
-    local prompt="${*:-Summarize the current progress and any blockers.}"
+     shift
+    local prompt="${*:-Summarize TARGET_AGENT progress against the ticket acceptance criteria. Output sections: Accomplished, Current status, Blockers (with evidence + 1–2 unblocking options each), Next actions (max 3), Waiting for input? (yes/no). Cite concrete evidence from the last N trajectory lines. Label any inference and give confidence.}"
 
     require_project
     load_config
@@ -156,7 +156,7 @@ cmd_fetch() {
 
     # Capture pane output
     local pane_output
-    pane_output=$(tmux capture-pane -t "$tmux_pane_id" -p -S -100 2>/dev/null)
+    pane_output=$(tmux capture-pane -t "$tmux_pane_id" -p -S -100)
 
     # Get ticket info from tickets (single source of truth)
     local ticket_id
@@ -165,37 +165,56 @@ cmd_fetch() {
     ticket_id=$(get_agent_ticket "$agent_id")
 
     if [[ -n "$ticket_id" ]]; then
-        ticket_content=$(bare_read_ticket "${ticket_id}.md" 2>/dev/null)
+        ticket_content=$(bare_read_ticket "${ticket_id}.md")
     fi
 
     # Build context for ephemeral agent
     local context="
-# Worker Pane Output (last 100 lines)
+You are an ephemeral agent for information retrieval, invoked by the wiggum multi-agent orchestration system.
 
-\`\`\`
-$pane_output
-\`\`\`
+# Task
+
+Your task is to synthesize the trajectory of the TARGET_AGENT into an answer to the following request.
+
+<request>
+"$prompt"
+</request>
+
+Please pay critical attention to the following when synthesizing your response:
+- What has been accomplished
+- Current status
+- Any blockers or concerns
+- Is the TARGET_AGENT waiting idly for input?
+
+Respond in a maximum of 2 paragraphs.
+
+# Context
+
+TARGET_AGENT=\"$agent_id\"
 "
 
     if [[ -n "$ticket_content" ]]; then
         context="$context
+You may find it useful to note that the TARGET_AGENT is currently assigned to the following ticket:
 
-# Assigned Ticket
-
-$ticket_content
+=== BEGIN TARGET_AGENT TICKET CONTENT ===
+<$agent_id-ticket-content>
+\`\`\`
+"$ticket_content"
+\`\`\`
+</$agent_id-ticket-content>
+=== END TARGET_AGENT TICKET CONTENT ===
 "
     fi
 
     context="$context
-
-# Task
-
-$prompt
-
-Provide a concise summary (2-3 sentences max). Focus on:
-- What has been accomplished
-- Current status
-- Any blockers or concerns
+=== BEGIN TARGET_AGENT TRAJECTORY ===
+<$agent_id-trajectory>
+\`\`\`
+"$pane_output"
+\`\`\`
+</$agent_id-trajectory>
+=== END TARGET_AGENT TRAJECTORY ===
 "
 
     fetch_fallback() {
@@ -204,16 +223,17 @@ Provide a concise summary (2-3 sentences max). Focus on:
         lines=$(echo "$pane_output" | wc -l)
         local last_line
         last_line=$(echo "$pane_output" | tail -1)
+        warn "Failed to provide intelligent summary."
         echo "Agent $agent_id: $lines lines of output"
         echo "Last activity: $last_line"
         if [[ -n "$ticket_id" ]]; then
             local state
-            state=$(bare_get_frontmatter_value "${ticket_id}.md" "state" 2>/dev/null)
+            state=$(bare_get_frontmatter_value "${ticket_id}.md" "state")
             echo "Ticket $ticket_id in state: $state"
         fi
     }
 
-    cmd_ephemeral "$context" || fetch_fallback
+   cmd_ephemeral "$context" || fetch_fallback
 }
 
 # Summarize the whole hive
@@ -237,7 +257,7 @@ cmd_digest() {
     local registry="$MAIN_PROJECT_ROOT/$PANE_REGISTRY_FILE"
     if [[ -f "$registry" ]] && [[ -s "$registry" ]] && command -v jq &>/dev/null; then
         local keys
-        keys=$(jq -r 'keys[]' "$registry" 2>/dev/null)
+        keys=$(jq -r 'keys[]' "$registry")
         if [[ -n "$keys" ]]; then
             context="$context## Active Agents
 
@@ -250,7 +270,7 @@ cmd_digest() {
 
                 context="$context- $agent_id ($role)"
                 if [[ -n "$ticket" ]]; then
-                    title=$(bare_read_ticket "${ticket}.md" 2>/dev/null | grep -m1 '^# ' | sed 's/^# //')
+                    title=$(bare_read_ticket "${ticket}.md" | grep -m1 '^# ' | sed 's/^# //')
                     context="$context: $ticket - $title"
                 fi
                 context="$context
@@ -337,7 +357,7 @@ cmd_logs() {
         echo "(Following... Ctrl+C to exit)"
         while true; do
             sleep 1
-            tmux capture-pane -t "$tmux_pane_id" -p -S -1 2>/dev/null || break
+            tmux capture-pane -t "$tmux_pane_id" -p -S -1 || break
         done
     else
         tmux capture-pane -t "$tmux_pane_id" -p -S -"$tail_lines"
@@ -382,7 +402,7 @@ $ticket_content
         for dep in $deps; do
             [[ -z "$dep" ]] && continue
             local dep_content
-            dep_content=$(bare_read_ticket "${dep}.md" 2>/dev/null)
+            dep_content=$(bare_read_ticket "${dep}.md")
             if [[ -n "$dep_content" ]]; then
                 local dep_state
                 dep_state=$(echo "$dep_content" | awk '/^state:/{print $2; exit}')
@@ -405,7 +425,7 @@ $ticket_content
         for spec_file in "$MAIN_PROJECT_ROOT/specs"/*.md "$MAIN_PROJECT_ROOT/specs"/**/*.md; do
             [[ -f "$spec_file" ]] || continue
             # Simple keyword matching
-            if grep -qi "$title" "$spec_file" 2>/dev/null; then
+            if grep -qi "$title" "$spec_file"; then
                 related_specs="$related_specs
 - $(basename "$spec_file")"
             fi
@@ -429,43 +449,13 @@ $prompt
 
 # Run an ephemeral agent (internal use)
 cmd_ephemeral() {
-    local prompt=""
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --prompt)
-                prompt="$2"
-                shift 2
-                ;;
-            *)
-                shift
-                ;;
-        esac
-    done
-
+    local prompt="${*}"
     load_config
-
-    # Read from stdin, apply prompt, output result
-    local input
-    input=$(cat)
-
-    if [[ -z "$input" && -z "$prompt" ]]; then
+    if [[ -z "$prompt" ]]; then
         error "No context provided to ephemeral agent"
     fi
-
-    local context
-    context="$prompt"
-
-    if [[ -n "$context" ]]; then 
-        if [[ -z "$input" ]]; then
-            context+="\n\n$input"
-        fi
-    else 
-        context="$input"
-    fi
-
     if command -v "$WIGGUM_AGENT_CMD" &>/dev/null; then
-        "$WIGGUM_AGENT_CMD" --print -p "$context" || warn "Error invoking $WIGGUM_AGENT_CMD"
+        "$WIGGUM_AGENT_CMD" --print -- "$prompt" || warn "Error invoking $WIGGUM_AGENT_CMD"
     else
         error '$WIGGUM_AGENT_CMD is unset or does not exist'
     fi

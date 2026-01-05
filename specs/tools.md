@@ -127,16 +127,16 @@ wiggum context tk-5c46 "what specs are relevant?"
 
 ---
 
-### wiggum ticket feedback
+### wiggum ticket comment
 
-Append feedback to a ticket and notify the worker. See [cli.md](./cli.md#feedback) for command details.
+Append comment to a ticket and notify the worker. See [cli.md](./cli.md#comment) for command details.
 
 This command is listed here because it has **tool-like side effects** beyond simple file editing:
 
-1. Appends timestamped feedback to ticket's `## Feedback` section
+1. Appends timestamped comment to ticket's `## Comment` section
 2. If ticket has an assigned pane, pings the worker:
    ```bash
-   tmux send-keys -t worker-0 "# Feedback added to your ticket. Please address." Enter
+   tmux send-keys -t worker-0 "# Comment added to your ticket. Please address." Enter
    ```
 
 This notification loop is how rejected reviews/QA get the worker's attention.

@@ -21,7 +21,7 @@ get_bare_repo() {
     if is_ticket_origin; then
         echo "$TICKETS_DIR"
     else
-        echo "$WIGGUM_DIR/tickets.git"
+        echo "$MAIN_WIGGUM_DIR/tickets.git"
     fi
 }
 

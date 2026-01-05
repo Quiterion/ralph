@@ -13,6 +13,12 @@ send_pane_input() {
     local target="$1"
     local message="$2"
 
+    # Interrupt agent
+    tmux send-keys -t "$target" Escape
+    sleep 0.1
+    tmux send-keys -t "$target" Escape
+    sleep 2
+
     if [[ "${WIGGUM_EDITOR_MODE:-normal}" == "vim" ]]; then
         # Vim mode: Escape to ensure normal mode, 'i' to insert, type message, Enter to submit
         tmux send-keys -t "$target" Escape
@@ -22,13 +28,12 @@ send_pane_input() {
         # Send message as literal text, then Enter to submit
         tmux send-keys -t "$target" -l "$message"
         sleep 0.1
-        tmux send-keys -t "$target" Enter
     else
         # Normal mode: just send message and Enter
         tmux send-keys -t "$target" -l "$message"
         sleep 0.1
-        tmux send-keys -t "$target" Enter
     fi
+    tmux send-keys -t "$target" Enter
 }
 
 # Get next agent index for a role
@@ -191,15 +196,15 @@ build_agent_prompt() {
     local relevant_specs=""
     local project_specs=""
     local dependencies=""
-    local feedback=""
+    local comment=""
 
     if [[ -n "$ticket_id" ]]; then
         local ticket_path="$TICKETS_DIR/${ticket_id}.md"
         if [[ -f "$ticket_path" ]]; then
             ticket_content=$(cat "$ticket_path")
 
-            # Extract feedback section if present
-            feedback=$(awk '/^## Feedback/,/^## [^F]|^$/' "$ticket_path" 2>/dev/null || true)
+            # Extract comment section if present
+            comment=$(awk '/^## Comment/,/^## [^F]|^$/' "$ticket_path" 2>/dev/null || true)
 
             # Extract dependencies
             dependencies=$(get_frontmatter_value "$ticket_path" "depends_on" || true)
@@ -218,7 +223,7 @@ build_agent_prompt() {
     template="${template//\{RELEVANT_SPECS\}/$relevant_specs}"
     template="${template//\{PROJECT_SPECS\}/$project_specs}"
     template="${template//\{DEPENDENCIES\}/$dependencies}"
-    template="${template//\{FEEDBACK\}/$feedback}"
+    template="${template//\{COMMENT\}/$comment}"
 
     echo "$template"
 }

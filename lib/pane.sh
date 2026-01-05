@@ -529,18 +529,23 @@ cmd_list() {
 # Kill an agent pane
 cmd_kill() {
     if [[ $# -lt 1 ]]; then
-        error "Usage: wiggum kill <agent-id> [--release-ticket]"
+        error "Usage: wiggum kill <agent-id> [--release-ticket] [--force]"
         exit "$EXIT_INVALID_ARGS"
     fi
 
     local agent_id="$1"
     shift
     local release_ticket=false
+    local force=false
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
         --release-ticket | --release)
             release_ticket=true
+            shift
+            ;;
+        --force | -f)
+            force=true
             shift
             ;;
         *)
@@ -569,6 +574,44 @@ cmd_kill() {
     if [[ -n "$tmux_pane_id" ]]; then
         tmux kill-pane -t "$tmux_pane_id" 2>/dev/null &&
             info "Killed tmux pane"
+    fi
+
+    # Clean up worktree
+    local worktree_path="$MAIN_PROJECT_ROOT/worktrees/$agent_id"
+    if [[ -d "$worktree_path" ]]; then
+        info "Cleaning up worktree for $agent_id..."
+
+        # Remove untracked files created by wiggum
+        # This allows 'git worktree remove' to succeed if no other untracked files exist.
+        [[ -d "$worktree_path/.wiggum" ]] && rm -rf "$worktree_path/.wiggum"
+        [[ -L "$worktree_path/.claude" ]] && rm -f "$worktree_path/.claude"
+        [[ -d "$worktree_path/.claude" ]] && rm -rf "$worktree_path/.claude"
+
+        local wt_args=()
+        [[ "$force" == "true" ]] && wt_args+=("--force")
+
+        local wt_output
+        if wt_output=$(git worktree remove "${wt_args[@]}" "$worktree_path" 2>&1); then
+            info "Removed worktree"
+        else
+            warn "Failed to remove worktree: $worktree_path"
+            debug "Git output: $wt_output"
+        fi
+    fi
+
+    # Clean up branch
+    if git rev-parse --verify "$agent_id" &>/dev/null; then
+        info "Cleaning up branch $agent_id..."
+        local branch_args=("-d")
+        [[ "$force" == "true" ]] && branch_args=("-D")
+
+        local br_output
+        if br_output=$(git branch "${branch_args[@]}" "$agent_id" 2>&1); then
+            info "Deleted branch $agent_id"
+        else
+            warn "Failed to delete branch $agent_id (it may have unmerged changes). Use --force to delete anyway."
+            debug "Git output: $br_output"
+        fi
     fi
 
     # Unregister

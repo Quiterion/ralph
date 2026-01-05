@@ -61,7 +61,7 @@ Session Management:
 Agent Management:
   spawn <role> [ticket-id]      Spawn an agent in a new pane
   list [--format FORMAT]        List active agents
-  kill <agent-id> [--release]   Kill an agent
+  kill <agent-id> [--release] [--force] Kill an agent
   ping <agent-id> <message>     Send message to an agent
 
 Observability:

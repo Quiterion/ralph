@@ -30,6 +30,8 @@ source "$SCRIPT_DIR/test_tmux.sh"
 source "$SCRIPT_DIR/test_observability.sh"
 # shellcheck source=test_distributed.sh
 source "$SCRIPT_DIR/test_distributed.sh"
+# shellcheck source=test_kill.sh
+source "$SCRIPT_DIR/test_kill.sh"
 
 #
 # Main
@@ -68,6 +70,10 @@ main() {
     echo ""
     echo "Distributed tickets tests:"
     run_tests "$filter" DISTRIBUTED_TESTS
+
+    echo ""
+    echo "Kill cleanup tests:"
+    run_tests "$filter" KILL_TESTS
 
     # Print summary
     print_summary

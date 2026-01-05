@@ -123,14 +123,20 @@ reviewer-0   reviewer     tk-3a1b      10m
 
 ### wiggum kill
 
-Kill a worker pane.
+Kill a worker pane and clean up its resources.
 
 ```bash
-wiggum kill <pane-id> [--release-ticket]
+wiggum kill <pane-id> [--release-ticket] [--force]
 ```
 
+**Effects:**
+- Kills the tmux pane associated with the agent.
+- Attempts to remove the git worktree and delete the agent's branch.
+- Unregisters the agent from the pane registry.
+
 **Flags:**
-- `--release-ticket` — Return assigned ticket to `ready` state
+- `--release-ticket` — Return assigned ticket to `ready` state.
+- `--force` — Force removal of worktree and branch even if they contain modified or unmerged changes.
 
 ---
 

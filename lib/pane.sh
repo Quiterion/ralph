@@ -15,11 +15,14 @@ send_pane_input() {
     local target="$1"
     local message="$2"
 
-    # Interrupt agent
-    tmux send-keys -t "$target" Escape
-    sleep 0.1
-    tmux send-keys -t "$target" Escape
-    sleep 2
+    # Only send double escape to interrupt agent when using coco (Claude Code CLI)
+    # This is needed because coco can be in the middle of a tool call that needs interrupting
+    if [[ "${WIGGUM_AGENT_CMD:-}" == "coco" ]]; then
+        tmux send-keys -t "$target" Escape
+        sleep 0.1
+        tmux send-keys -t "$target" Escape
+        sleep 2
+    fi
 
     if [[ "${WIGGUM_EDITOR_MODE:-normal}" == "vim" ]]; then
         # Vim mode: Escape to ensure normal mode, 'i' to insert, type message, Enter to submit
@@ -36,6 +39,26 @@ send_pane_input() {
         sleep 0.1
     fi
     tmux send-keys -t "$target" Enter
+}
+
+# Send raw keys to a pane
+# Usage: send_raw_keys <session:window.pane> <keys>
+# This directly calls tmux send-keys with the provided keys
+send_raw_keys() {
+    local target="$1"
+    shift
+    local keys="$*"
+
+    # Only send double escape when using coco (Claude Code CLI)
+    if [[ "${WIGGUM_AGENT_CMD:-}" == "coco" ]]; then
+        tmux send-keys -t "$target" Escape
+        sleep 0.1
+        tmux send-keys -t "$target" Escape
+        sleep 2
+    fi
+
+    # Send the keys directly without any vim mode handling
+    tmux send-keys -t "$target" "$keys"
 }
 
 # Get next agent index for a role
@@ -646,6 +669,40 @@ cmd_ping() {
     send_pane_input "$tmux_pane_id" "$message"
 
     success "Pinged $agent_id"
+}
+
+# Send raw keys to an agent pane
+cmd_send_keys() {
+    if [[ $# -lt 2 ]]; then
+        error "Usage: wiggum send-keys <agent-id> <keys>"
+        exit "$EXIT_INVALID_ARGS"
+    fi
+
+    local agent_id="$1"
+    shift
+    local keys="$*"
+
+    require_project
+    load_config
+
+    if ! session_exists "$WIGGUM_SESSION"; then
+        error "Session not found"
+        exit "$EXIT_SESSION_NOT_FOUND"
+    fi
+
+    # Look up tmux pane ID from registry
+    local tmux_pane_id
+    tmux_pane_id=$(get_tmux_pane_id "$agent_id")
+
+    if [[ -z "$tmux_pane_id" ]]; then
+        error "Agent not found in registry: $agent_id"
+        exit "$EXIT_PANE_NOT_FOUND"
+    fi
+
+    # Send raw keys directly
+    send_raw_keys "$tmux_pane_id" "$keys"
+
+    success "Sent keys to $agent_id"
 }
 
 # Check if there's capacity for more workers

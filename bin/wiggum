@@ -63,6 +63,7 @@ Agent Management:
   list [--format FORMAT]        List active agents
   kill <agent-id> [--release] [--force] Kill an agent
   ping <agent-id> <message>     Send message to an agent
+  send-keys <agent-id> <keys>   Send raw tmux keys to an agent
 
 Observability:
   status [--verbose]            Overview of the hive
@@ -179,6 +180,9 @@ main() {
         ;;
     ping)
         cmd_ping "$@"
+        ;;
+    send-keys)
+        cmd_send_keys "$@"
         ;;
 
     # Observability

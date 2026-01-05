@@ -288,6 +288,65 @@ test_send_keys_to_agent() {
     cleanup_test_session "$session"
 }
 
+test_teardown_cleans_up_worktrees_and_branches() {
+    if ! tmux_available; then
+        echo "SKIP:tmux not available"
+        return 0
+    fi
+
+    local session
+    session=$(test_session_name)
+    export WIGGUM_SESSION="$session"
+    trap "cleanup_test_session '$session'" RETURN
+
+    "$WIGGUM_BIN" init
+
+    # Need at least one commit for worktree to work
+    touch README.md
+    git add README.md
+    git commit -m "Initial commit" &>/dev/null
+
+    # Spawn a worker (needs a ticket)
+    "$WIGGUM_BIN" ticket create "Test ticket" &>/dev/null
+    local ticket_id
+    ticket_id=$("$WIGGUM_BIN" ticket ready | head -n 1)
+
+    if [[ -z "$ticket_id" ]]; then
+        echo "Failed to create ticket"
+        return 1
+    fi
+
+    local agent_id
+    agent_id=$("$WIGGUM_BIN" --quiet spawn worker "$ticket_id" | tail -n 1)
+
+    if [[ -z "$agent_id" ]]; then
+        echo "Failed to spawn agent"
+        return 1
+    fi
+
+    # Verify worktree exists
+    local worktree_path="worktrees/$agent_id"
+    assert_dir_exists "$worktree_path" "Worktree should exist after spawn"
+
+    # Verify branch exists
+    if ! git rev-parse --verify "$agent_id" &>/dev/null; then
+        echo "Branch $agent_id should exist after spawn"
+        return 1
+    fi
+
+    # Teardown the session (should clean up all worktrees and branches)
+    "$WIGGUM_BIN" --verbose teardown --force
+
+    # Verify worktree is gone
+    assert_not_exists "$worktree_path" "Worktree should be removed after teardown"
+
+    # Verify branch is gone
+    if git rev-parse --verify "$agent_id" &>/dev/null; then
+        echo "Branch $agent_id should be removed after teardown"
+        return 1
+    fi
+}
+
 #
 # Test list
 #
